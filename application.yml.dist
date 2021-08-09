@@ -1,0 +1,12 @@
+phaedra2:
+    script-engine-worker:
+        workspace: /tmp/phaedra2-scriptengine/
+        # clean-workspace: true
+        env:
+            language: r
+            pool-name: fast-lane # or background
+            version: v0.1
+
+logging:
+    level:
+        eu.openanalytics: DEBUG

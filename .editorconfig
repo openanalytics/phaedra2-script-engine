@@ -1,0 +1,35 @@
+root = true
+
+[*]
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.java]
+# ij_java_names_count_to_use_import_on_demand = 50000
+charset = utf-8
+ij_any_wrap_long_lines = false
+ij_formatter_off_tag = "@formatter:off"
+ij_formatter_on_tag = "@formatter:on"
+ij_java_call_parameters_new_line_after_left_paren = false
+ij_java_call_parameters_right_paren_on_new_line = false
+ij_java_method_parameters_new_line_after_left_paren = false
+ij_java_method_parameters_right_paren_on_new_line = false
+indent_size = 4
+indent_style = space
+max_line_length = 256
+
+
+[*.gradle]
+indent_style = tab
+
+[*yaml]
+indent_style = space
+indent_size = 2
+charset = utf-8
+
+
+[Jenkinsfile]
+indent_style = space
+indent_size = 4
+charset = utf-8
