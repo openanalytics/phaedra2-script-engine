@@ -22,13 +22,21 @@ package eu.openanalytics.phaedra.phaedra2scriptengine;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the binding and validation of the configuration.
  */
+@Testcontainers
 class ConfigIntegrationTest {
+
+    @Container
+    public static final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer("rabbitmq:3-management")
+        .withAdminPassword(null);
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 
@@ -36,6 +44,9 @@ class ConfigIntegrationTest {
     void contextLoads() {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port" + rabbitMQContainer.getAmqpPort())
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -126,7 +137,9 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.language=xyz",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
-                "phaedra2.script-engine-worker.workspace=/tmp/")
+                "phaedra2.script-engine-worker.workspace=/tmp/",
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -140,7 +153,9 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.language=r",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
-                "phaedra2.script-engine-worker.workspace=/tmp/")
+                "phaedra2.script-engine-worker.workspace=/tmp/",
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
             .run(context -> {
                 assertThat(context).hasNotFailed();
             });

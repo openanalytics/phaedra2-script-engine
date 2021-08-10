@@ -34,12 +34,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessagePollerService {
 
-    private final static int POLLING_TIMEOUT = 10000;
+    public final static int POLLING_TIMEOUT = 10000;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private volatile boolean enabled = true;
 
     public MessagePollerService(RabbitTemplate rabbitTemplate, MessageProcessorService messageProcessorService) {
         Thread daemonThread = new Thread(() -> {
             while (true) {
+                if (!enabled) {
+                    try {
+                        Thread.sleep(POLLING_TIMEOUT);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                    continue;
+                }
                 Message message = rabbitTemplate.receive(POLLING_TIMEOUT);
                 if (message == null) {
                     logger.info("Received no message");
@@ -61,6 +71,14 @@ public class MessagePollerService {
         });
         daemonThread.setDaemon(true);
         daemonThread.start();
+    }
+
+    public void stop() {
+        enabled = false;
+    }
+
+    public void start() {
+        enabled = true;
     }
 
 }
