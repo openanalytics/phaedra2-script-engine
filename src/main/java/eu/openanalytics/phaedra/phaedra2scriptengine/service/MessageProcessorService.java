@@ -67,12 +67,18 @@ public class MessageProcessorService {
         logger.debug("Received a valid input message.");
 
         var scriptExecution = new ScriptExecution(input);
-        var scriptExecutionOutput = executor.execute(scriptExecution);
-        var response = constructResponse(scriptExecutionOutput);
+        try {
+            var scriptExecutionOutput = executor.execute(scriptExecution);
+            if (scriptExecutionOutput == null) return null;
 
-        if (response == null) return null;
+            var response = constructResponse(scriptExecutionOutput);
+            if (response == null) return null;
 
-        return Pair.of(constructResponseRoutingKey(input), response);
+            return Pair.of(constructResponseRoutingKey(input), response);
+        } catch (Exception e) {
+            logger.warn("Exception while processing message" + message, e);
+            return null;
+        }
     }
 
     /**
@@ -107,7 +113,7 @@ public class MessageProcessorService {
                     put("output", scriptExecutionResult.getOutput());
                 }})
             );
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.warn("Cannot construct response message from execution result" + scriptExecutionResult, e);
             return null;
         }

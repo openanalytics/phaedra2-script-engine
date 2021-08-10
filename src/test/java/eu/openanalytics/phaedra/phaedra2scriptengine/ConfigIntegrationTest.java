@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests the binding and validation of the configuration.
  */
-class ConfigTest {
+class ConfigIntegrationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner();
 

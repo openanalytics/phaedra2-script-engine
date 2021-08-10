@@ -24,6 +24,8 @@ import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ import java.util.UUID;
 public abstract class AbstractExecutor implements IExecutor {
 
     private final Config config;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public AbstractExecutor(Config config) {
         this.config = config;
@@ -58,10 +62,6 @@ public abstract class AbstractExecutor implements IExecutor {
 
             String output = readOutput(scriptExecution);
 
-            if (config.getCleanWorkspace()) {
-                cleanWorkspace(scriptExecution);
-            }
-
             return new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(),
                 output, ResponseStatusCode.SUCCESS, "Ok", exitCode);
 
@@ -69,6 +69,10 @@ public abstract class AbstractExecutor implements IExecutor {
             e.printStackTrace();
             return new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(),
                 "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", -1);
+        } finally {
+            if (config.getCleanWorkspace()) {
+                cleanWorkspace(scriptExecution);
+            }
         }
     }
 
@@ -155,13 +159,12 @@ public abstract class AbstractExecutor implements IExecutor {
      * Counterpart of @{link setupEnv}
      *
      * @param scriptExecution the executed script
-     * @throws WorkerException indicates an exception in the Java code (not the script)
      */
-    protected void cleanWorkspace(ScriptExecution scriptExecution) throws WorkerException {
+    protected void cleanWorkspace(ScriptExecution scriptExecution) {
         try {
             FileSystemUtils.deleteRecursively(scriptExecution.getWorkspace());
         } catch (IOException e) {
-            throw new WorkerException("Cannot remove workspace", e);
+            logger.warn("Cannot remove workspace", e);
         }
     }
 
