@@ -40,11 +40,8 @@ public class Config {
     @PostConstruct
     public void init() {
         if (workspace == null) {
-            throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.env.language not set");
+            throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.workspace not set");
         }
-    }
-
-    public void setWorkspace(String workspace) {
         if (!workspace.startsWith("/") || !workspace.endsWith("/")) {
             throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.workspace must start and end with /");
         }
@@ -52,6 +49,9 @@ public class Config {
         if (!path.exists() || !path.isDirectory()) {
             throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.workspace does not exists or is not a directory");
         }
+    }
+
+    public void setWorkspace(String workspace) {
         this.workspace = workspace;
     }
 
