@@ -20,6 +20,19 @@
         <java.version>11</java.version>
     </properties>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>oa-nexus-snapshots</id>
+            <name>OpenAnalytics Snapshots Repository</name>
+            <url>https://nexus.openanalytics.eu/repository/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>oa-nexus-releases</id>
+            <name>OpenAnalytics Release Repository</name>
+            <url>https://nexus.openanalytics.eu/repository/releases</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
