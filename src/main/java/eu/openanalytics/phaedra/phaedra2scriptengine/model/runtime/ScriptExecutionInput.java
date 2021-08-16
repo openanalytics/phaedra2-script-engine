@@ -31,15 +31,18 @@ public class ScriptExecutionInput {
     private final String script;
     private final String input;
     private final String responseTopicSuffix;
+    private final long queueTimestamp;
 
     public ScriptExecutionInput(@JsonProperty(value = "id", required = true) String id,
                                 @JsonProperty(value = "script", required = true) String script,
                                 @JsonProperty(value = "input", required = true) String input,
-                                @JsonProperty(value = "response_topic_suffix", required = true) String responseTopicSuffix) {
+                                @JsonProperty(value = "response_topic_suffix", required = true) String responseTopicSuffix,
+                                @JsonProperty(value = "queue_timestamp", required = true) long queueTimestamp) {
         this.id = id;
         this.script = script;
         this.input = input;
         this.responseTopicSuffix = responseTopicSuffix;
+        this.queueTimestamp = queueTimestamp;
     }
 
     public String getInput() {
@@ -56,5 +59,9 @@ public class ScriptExecutionInput {
 
     public String getId() {
         return id;
+    }
+
+    public long getQueueTimestamp() {
+        return queueTimestamp;
     }
 }

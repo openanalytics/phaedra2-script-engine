@@ -36,9 +36,14 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
 
+@EnableAsync
 @SpringBootApplication
 public class ScriptEngineWorkerApplication {
 
@@ -49,7 +54,9 @@ public class ScriptEngineWorkerApplication {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static void main(String[] args) {
-        SpringApplication.run(ScriptEngineWorkerApplication.class, args);
+        SpringApplication app = new SpringApplication(ScriptEngineWorkerApplication.class);
+        setDefaultProperties(app);
+        app.run(args);
     }
 
     private final String inputQueueName;
@@ -94,6 +101,27 @@ public class ScriptEngineWorkerApplication {
         } else {
             throw new IllegalArgumentException(String.format("Unsupported language found %s", envConfig.getLanguage()));
         }
+    }
+
+    @Bean
+    public Executor taskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.initialize();
+        return executor;
+    }
+
+    private static void setDefaultProperties(SpringApplication app) {
+        Properties properties = new Properties();
+
+        properties.put("management.metrics.export.prometheus.enabled", "true");
+        properties.put("management.server.port", "9090");
+        properties.put("management.endpoint.prometheus.enabled", "true");
+        properties.put("management.endpoints.web.exposure.include", "health,prometheus");
+        properties.put("management.endpoint.health.probes.enabled", true);
+
+        app.setDefaultProperties(properties);
     }
 
 }

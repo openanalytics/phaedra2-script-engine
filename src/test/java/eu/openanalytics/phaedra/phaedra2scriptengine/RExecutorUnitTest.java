@@ -41,7 +41,7 @@ public class RExecutorUnitTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -60,7 +60,7 @@ public class RExecutorUnitTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -73,17 +73,16 @@ public class RExecutorUnitTest {
         Assertions.assertEquals("{\"a\": 1, \"b\":2}", Files.readString(scriptExecution.getWorkspace().resolve("input.json")));
         Assertions.assertEquals(
             "fh <- file(\"input.json\")\n" +
-            "input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n" +
-            "close(fh)\n" +
-            "output <- input$a + input$b\n" +
-            "fh <- file(\"output.json\")\n" +
-            "writeLines(rjson::toJSON(list(output = output)), fh)\n" +
-            "close(fh)\n",
+                "input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n" +
+                "close(fh)\n" +
+                "output <- input$a + input$b\n" +
+                "fh <- file(\"output.json\")\n" +
+                "writeLines(rjson::toJSON(list(output = output)), fh)\n" +
+                "close(fh)\n",
             Files.readString(scriptExecution.getWorkspace().resolve("script.R")));
         Assertions.assertEquals("{\"output\":3}\n", Files.readString(scriptExecution.getWorkspace().resolve("output.json")));
 
     }
-
 
 
 }

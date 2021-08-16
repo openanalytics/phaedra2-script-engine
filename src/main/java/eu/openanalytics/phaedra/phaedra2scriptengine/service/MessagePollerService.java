@@ -39,6 +39,8 @@ public class MessagePollerService {
 
     private volatile boolean enabled = true;
 
+    private volatile boolean isBusy = false;
+
     public MessagePollerService(RabbitTemplate rabbitTemplate, MessageProcessorService messageProcessorService) {
         Thread daemonThread = new Thread(() -> {
             while (true) {
@@ -50,6 +52,7 @@ public class MessagePollerService {
                     }
                     continue;
                 }
+                isBusy = false;
                 Message message = rabbitTemplate.receive(POLLING_TIMEOUT);
                 if (message == null) {
                     logger.info("Received no message");
@@ -58,6 +61,7 @@ public class MessagePollerService {
                     }
                     continue;
                 }
+                isBusy = true;
 
                 try {
                     Pair<String, Message> response = messageProcessorService.processMessage(message);
@@ -81,4 +85,7 @@ public class MessagePollerService {
         enabled = true;
     }
 
+    public Boolean isBusy() {
+        return isBusy;
+    }
 }

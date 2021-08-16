@@ -44,7 +44,9 @@ public class MessageProcessorServiceUnitTest {
 
         var processor = new MessageProcessorService(
             scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config);
+            config,
+            event -> {
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertEquals("scriptengine.output.myTopic", response.getFirst());
@@ -59,7 +61,9 @@ public class MessageProcessorServiceUnitTest {
 
         var processor = new MessageProcessorService(
             scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config);
+            config,
+            event -> {
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -73,7 +77,9 @@ public class MessageProcessorServiceUnitTest {
 
         var processor = new MessageProcessorService(
             scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config);
+            config,
+            event -> {
+            });
 
         // missing id
         Assertions.assertNull(processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\"}".getBytes(StandardCharsets.UTF_8))));
@@ -98,7 +104,9 @@ public class MessageProcessorServiceUnitTest {
             scriptExecution -> {
                 throw new RuntimeException("oops");
             },
-            config);
+            config,
+            event -> {
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -113,7 +121,9 @@ public class MessageProcessorServiceUnitTest {
 
         var processor = new MessageProcessorService(
             scriptExecution -> null,
-            config);
+            config,
+            event -> {
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -127,7 +137,9 @@ public class MessageProcessorServiceUnitTest {
 
         var processor = new MessageProcessorService(
             scriptExecution -> new ScriptExecutionOutput(null, null, null, null, 0),
-            config);
+            config,
+            event -> {
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);

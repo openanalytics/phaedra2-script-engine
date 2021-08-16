@@ -21,7 +21,6 @@
 package eu.openanalytics.phaedra.phaedra2scriptengine;
 
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.MessagePollerService;
-import eu.openanalytics.phaedra.phaedra2scriptengine.service.MessageProcessorService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

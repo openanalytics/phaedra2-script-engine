@@ -64,7 +64,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -98,7 +98,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -132,7 +132,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -171,7 +171,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -211,7 +211,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         myExecutor.execute(scriptExecution);
@@ -241,7 +241,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));
@@ -273,7 +273,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic"));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));

@@ -26,13 +26,17 @@ import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecuti
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionInput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.IExecutor;
+import eu.openanalytics.phaedra.phaedra2scriptengine.stat.ScriptProcessedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 
 /**
@@ -47,9 +51,12 @@ public class MessageProcessorService {
     private final Config config;
     private final IExecutor executor;
 
-    public MessageProcessorService(IExecutor executor, Config config) {
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    public MessageProcessorService(IExecutor executor, Config config, ApplicationEventPublisher applicationEventPublisher) {
         this.executor = executor;
         this.config = config;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     /**
@@ -66,6 +73,8 @@ public class MessageProcessorService {
         if (input == null) return null;
         logger.debug("Received a valid input message.");
 
+        Duration timeInQueue = Duration.between(Instant.ofEpochMilli(input.getQueueTimestamp()), Instant.now());
+
         var scriptExecution = new ScriptExecution(input);
         try {
             var scriptExecutionOutput = executor.execute(scriptExecution);
@@ -73,6 +82,8 @@ public class MessageProcessorService {
 
             var response = constructResponse(scriptExecutionOutput);
             if (response == null) return null;
+
+            applicationEventPublisher.publishEvent(new ScriptProcessedEvent(this, input.getId(), timeInQueue));
 
             return Pair.of(constructResponseRoutingKey(input), response);
         } catch (Exception e) {
