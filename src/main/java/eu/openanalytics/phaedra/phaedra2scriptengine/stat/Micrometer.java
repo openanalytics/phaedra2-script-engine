@@ -30,7 +30,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-
+/**
+ * Service registering and updating the Micrometer metrics.
+ */
 @Service
 public class Micrometer {
 
@@ -39,10 +41,10 @@ public class Micrometer {
     private final Counter processedScripts;
     private final Timer receiveDelay;
 
-    public Micrometer(MeterRegistry registry, IdleWatcher idleWatcher) {
+    public Micrometer(MeterRegistry registry, UserPercentageService idleWatcher) {
         processedScripts = registry.counter("phaedra2_scriptengine_worker_processed_scripts");
         receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay");
-        registry.gauge("phaedra2_scriptengine_worker_percentage_busy", Tags.empty(), idleWatcher, IdleWatcher::getBusyPercentage);
+        registry.gauge("phaedra2_scriptengine_worker_percentage_busy", Tags.empty(), idleWatcher, UserPercentageService::getBusyPercentage);
     }
 
     @Async

@@ -85,6 +85,9 @@ public class MessagePollerService {
         enabled = true;
     }
 
+    /**
+     * @return whether this worker is currently processing a script
+     */
     public Boolean isBusy() {
         return isBusy;
     }
