@@ -12,7 +12,7 @@ pipeline {
 
     stages {
 
-        stage('build and deploy to nexus'){
+        stage('Build'){
 
             steps {
 
@@ -20,11 +20,33 @@ pipeline {
 
                      configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                         sh 'mvn -s $MAVEN_SETTINGS_RSB -U clean install deploy -DskipTests=true'
+                         sh 'mvn -s $MAVEN_SETTINGS_RSB -U clean package -DskipTests'
 
                      }
                 }
             }
         }
+
+        stage('Test'){
+
+            steps {
+
+                container('builder') {
+
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+
+                        sh 'mvn -s $MAVEN_SETTINGS_RSB test'
+
+                    }
+                }
+            }
+        }
+
+        post {
+            success {
+                jacoco(execPattern: 'target/jacoco.exec')
+            }
+        }
+
     }
 }
