@@ -12,22 +12,22 @@ pipeline {
 
     stages {
 
-        stage('Build'){
+        stage('Build') {
 
             steps {
 
                 container('builder') {
 
-                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                         sh 'mvn -s $MAVEN_SETTINGS_RSB -U clean package -DskipTests'
+                        sh 'mvn -s $MAVEN_SETTINGS_RSB -U clean package -DskipTests'
 
-                     }
+                    }
                 }
             }
         }
 
-        stage('Test'){
+        stage('Test') {
 
             steps {
 
@@ -41,12 +41,12 @@ pipeline {
                 }
             }
         }
-
-        post {
-            success {
-                jacoco(execPattern: 'target/jacoco.exec')
-            }
-        }
-
     }
+    
+    post {
+        success {
+            jacoco(execPattern: 'target/jacoco.exec')
+        }
+    }
+
 }
