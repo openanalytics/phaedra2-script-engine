@@ -89,7 +89,7 @@ public class MainIntegrationTest {
         });
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\", \"queue_timestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
 
         // wait for response or timeout
         receivedResponse.assertCalled(5000);
@@ -105,7 +105,7 @@ public class MainIntegrationTest {
         var rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\", \"queue_timestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
 
         // sleep a bit
         Thread.sleep(5000);
@@ -133,7 +133,7 @@ public class MainIntegrationTest {
         Thread.sleep(MessagePollerService.POLLING_TIMEOUT);
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"response_topic_suffix\": \"calculationService\", \"id\": \"myId\", \"queue_timestamp\": 1024}".getBytes(StandardCharsets.UTF_8)));
 
         // wait until poller restarts
         Thread.sleep(10000);
@@ -141,7 +141,7 @@ public class MainIntegrationTest {
         // start poller again
         messagePollerService.start();
 
-        // now receive the response and assart that it is still there
+        // now receive the response and assert that it is still there
         Message response = rabbitTemplate.receive("scriptengine_output", 10000);
         Assertions.assertNotNull(response);
         Assertions.assertEquals("{\"status_message\":\"Ok\",\"output\":\"{\\\"output\\\":3}\\n\",\"status_code\":\"SUCCESS\",\"exit_code\":0,\"input_id\":\"myId\"}",

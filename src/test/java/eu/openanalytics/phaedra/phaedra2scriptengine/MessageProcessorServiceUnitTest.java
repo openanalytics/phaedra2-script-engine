@@ -48,7 +48,7 @@ public class MessageProcessorServiceUnitTest {
             event -> {
             });
 
-        Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
+        Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\", \"queue_timestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertEquals("scriptengine.output.myTopic", response.getFirst());
         Assertions.assertEquals("{\"status_message\":\"Ok\",\"output\":\"myOutput\",\"status_code\":\"SUCCESS\",\"exit_code\":0,\"input_id\":\"myId\"}", new String(response.getSecond().getBody(), StandardCharsets.UTF_8));
     }
