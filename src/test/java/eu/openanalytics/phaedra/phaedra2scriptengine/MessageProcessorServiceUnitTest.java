@@ -31,8 +31,6 @@ import org.springframework.data.util.Pair;
 
 import java.nio.charset.StandardCharsets;
 
-//@ExtendWith(SpringExtension.class)
-//@ContextConfiguration(classes = ScriptEngineWorkerApplication.class)
 // Unit Test
 public class MessageProcessorServiceUnitTest {
 
