@@ -21,10 +21,11 @@
 package eu.openanalytics.phaedra.phaedra2scriptengine.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.openanalytics.phaedra.model.v2.ModelMapper;
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionInput;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.IExecutor;
 import eu.openanalytics.phaedra.phaedra2scriptengine.stat.ScriptProcessedEvent;
 import org.slf4j.Logger;
@@ -37,7 +38,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 
 /**
  * Processes any incoming messages and executes the requested script.
@@ -52,11 +52,13 @@ public class MessageProcessorService {
     private final IExecutor executor;
 
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final ModelMapper modelMapper;
 
-    public MessageProcessorService(IExecutor executor, Config config, ApplicationEventPublisher applicationEventPublisher) {
+    public MessageProcessorService(IExecutor executor, Config config, ApplicationEventPublisher applicationEventPublisher, ModelMapper modelMapper) {
         this.executor = executor;
         this.config = config;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.modelMapper = modelMapper;
     }
 
     /**
@@ -69,7 +71,7 @@ public class MessageProcessorService {
      */
     public Pair<String, Message> processMessage(Message message) throws InterruptedException {
         // received a message -> process it
-        ScriptExecutionInput input = parseMessage(message);
+        ScriptExecutionInputDTO input = parseMessage(message);
         if (input == null) return null;
         logger.debug("Received a valid input message.");
 
@@ -93,14 +95,14 @@ public class MessageProcessorService {
     }
 
     /**
-     * Converts the incoming message to a {@link ScriptExecutionInput}
+     * Converts the incoming message to a {@link ScriptExecutionInputDTO}
      *
      * @param message the message to parse
      * @return the parsed message or null when it is invalid
      */
-    private ScriptExecutionInput parseMessage(Message message) {
+    private ScriptExecutionInputDTO parseMessage(Message message) {
         try {
-            return objectMapper.readValue(message.getBody(), ScriptExecutionInput.class);
+            return objectMapper.readValue(message.getBody(), ScriptExecutionInputDTO.class);
         } catch (IOException e) {
             logger.warn("Received an invalid input message " + message, e);
             return null;
@@ -110,22 +112,14 @@ public class MessageProcessorService {
     /**
      * Constructs the response message.
      *
-     * @param scriptExecutionResult the output
+     * @param scriptExecutionOutput the output
      * @return the response message
      */
-    private Message constructResponse(ScriptExecutionOutput scriptExecutionResult) {
+    private Message constructResponse(ScriptExecutionOutputDTO scriptExecutionOutput) {
         try {
-            return new Message(
-                objectMapper.writeValueAsBytes(new HashMap<>() {{
-                    put("input_id", scriptExecutionResult.getScriptExecutionInput().getId());
-                    put("status_code", scriptExecutionResult.getStatusCode());
-                    put("status_message", scriptExecutionResult.getStatusMessage());
-                    put("exit_code", scriptExecutionResult.getExitCode());
-                    put("output", scriptExecutionResult.getOutput());
-                }})
-            );
+            return new Message(objectMapper.writeValueAsBytes(scriptExecutionOutput));
         } catch (Exception e) {
-            logger.warn("Cannot construct response message from execution result" + scriptExecutionResult, e);
+            logger.warn("Cannot construct response message from execution result" + scriptExecutionOutput, e);
             return null;
         }
     }
@@ -136,7 +130,7 @@ public class MessageProcessorService {
      * @param input the input for which a response will be sent
      * @return the routing key
      */
-    private String constructResponseRoutingKey(ScriptExecutionInput input) {
+    private String constructResponseRoutingKey(ScriptExecutionInputDTO input) {
         String res = config.getOutputRoutingKeyPrefix() + input.getResponseTopicSuffix();
         logger.debug("Sending response to {}", res);
         return res;

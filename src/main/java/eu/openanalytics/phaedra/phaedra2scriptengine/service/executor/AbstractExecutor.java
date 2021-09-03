@@ -20,10 +20,10 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine.service.executor;
 
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.model.v2.enumeration.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
@@ -49,26 +49,23 @@ public abstract class AbstractExecutor implements IExecutor {
     }
 
     @Override
-    public ScriptExecutionOutput execute(ScriptExecution scriptExecution) throws InterruptedException {
+    public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
         try {
             setupEnv(scriptExecution);
 
             int exitCode = executeScript(scriptExecution);
 
             if (!checkOutput(scriptExecution)) {
-                return new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(),
-                    "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output file!", exitCode);
+                return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output file!", exitCode);
             }
 
             String output = readOutput(scriptExecution);
 
-            return new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(),
-                output, ResponseStatusCode.SUCCESS, "Ok", exitCode);
+            return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), output, ResponseStatusCode.SUCCESS, "Ok", exitCode);
 
         } catch (WorkerException e) {
             e.printStackTrace();
-            return new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(),
-                "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", -1);
+            return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", -1);
         } finally {
             if (config.getCleanWorkspace()) {
                 cleanWorkspace(scriptExecution);

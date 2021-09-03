@@ -20,11 +20,11 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine.service.executor;
 
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
 
 /**
- * Interface for a service which can execute a {@link ScriptExecution}, producing a {@link ScriptExecutionOutput}.
+ * Interface for a service which can execute a {@link ScriptExecution}, producing a {@link ScriptExecutionOutputDTO}.
  */
 public interface IExecutor {
 
@@ -35,6 +35,6 @@ public interface IExecutor {
      * @return the output of the script
      * @throws InterruptedException when the thread is interrupted when waiting for the script to finish.
      */
-    ScriptExecutionOutput execute(ScriptExecution scriptExecution) throws InterruptedException;
+    ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException;
 
 }

@@ -20,6 +20,8 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime;
 
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionInputDTO;
+
 import java.nio.file.Path;
 
 /**
@@ -28,15 +30,15 @@ import java.nio.file.Path;
  */
 public class ScriptExecution {
 
-    private final ScriptExecutionInput scriptExecutionInput;
+    private final ScriptExecutionInputDTO scriptExecutionInput;
 
     private Path workspace;
 
-    public ScriptExecution(ScriptExecutionInput scriptExecutionInput) {
+    public ScriptExecution(ScriptExecutionInputDTO scriptExecutionInput) {
         this.scriptExecutionInput = scriptExecutionInput;
     }
 
-    public ScriptExecutionInput getScriptExecutionInput() {
+    public ScriptExecutionInputDTO getScriptExecutionInput() {
         return scriptExecutionInput;
     }
 

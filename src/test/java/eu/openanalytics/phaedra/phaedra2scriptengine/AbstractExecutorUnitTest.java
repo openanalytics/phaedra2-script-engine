@@ -20,10 +20,10 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine;
 
+import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.model.v2.enumeration.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionInput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.AbstractExecutor;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.WorkerException;
 import org.junit.jupiter.api.Assertions;
@@ -64,7 +64,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -98,7 +98,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -132,7 +132,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -171,7 +171,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -211,7 +211,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         myExecutor.execute(scriptExecution);
@@ -241,7 +241,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));
@@ -273,7 +273,7 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));
