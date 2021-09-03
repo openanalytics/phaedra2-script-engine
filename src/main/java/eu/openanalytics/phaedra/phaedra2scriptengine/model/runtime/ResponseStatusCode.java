@@ -18,23 +18,13 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.phaedra2scriptengine.service.executor;
-
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
+package eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime;
 
 /**
- * Interface for a service which can execute a {@link ScriptExecution}, producing a {@link ScriptExecutionOutput}.
+ * Enum indicating the status of a response.
  */
-public interface IExecutor {
-
-    /**
-     * Executes the script
-     *
-     * @param scriptExecution the script to execute
-     * @return the output of the script
-     * @throws InterruptedException when the thread is interrupted when waiting for the script to finish.
-     */
-    ScriptExecutionOutput execute(ScriptExecution scriptExecution) throws InterruptedException;
-
+public enum ResponseStatusCode {
+    SUCCESS,
+    WORKER_INTERNAL_ERROR,
+    SCRIPT_ERROR
 }

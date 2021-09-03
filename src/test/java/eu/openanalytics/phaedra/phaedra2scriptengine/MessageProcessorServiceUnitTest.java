@@ -20,10 +20,9 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine;
 
-import eu.openanalytics.phaedra.model.v2.ModelMapper;
-import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionOutputDTO;
-import eu.openanalytics.phaedra.model.v2.enumeration.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ResponseStatusCode;
+import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionOutput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.MessageProcessorService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,8 +34,6 @@ import java.nio.charset.StandardCharsets;
 // Unit Test
 public class MessageProcessorServiceUnitTest {
 
-    private final ModelMapper modelMapper = new ModelMapper();
-
     @Test
     public void basicTest() throws InterruptedException {
         var config = new Config();
@@ -44,10 +41,10 @@ public class MessageProcessorServiceUnitTest {
         config.setCleanWorkspace(true);
 
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO("myId", "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
             config,
             event -> {
-            }, modelMapper);
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\", \"queue_timestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertEquals("scriptengine.output.myTopic", response.getFirst());
@@ -61,10 +58,10 @@ public class MessageProcessorServiceUnitTest {
         config.setCleanWorkspace(true);
 
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO("myId", "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
             config,
             event -> {
-            }, modelMapper);
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -77,10 +74,10 @@ public class MessageProcessorServiceUnitTest {
         config.setCleanWorkspace(true);
 
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO("myId", "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            scriptExecution -> new ScriptExecutionOutput(scriptExecution.getScriptExecutionInput(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
             config,
             event -> {
-            }, modelMapper);
+            });
 
         // missing id
         Assertions.assertNull(processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\"}".getBytes(StandardCharsets.UTF_8))));
@@ -107,7 +104,7 @@ public class MessageProcessorServiceUnitTest {
             },
             config,
             event -> {
-            }, modelMapper);
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -124,7 +121,7 @@ public class MessageProcessorServiceUnitTest {
             scriptExecution -> null,
             config,
             event -> {
-            }, modelMapper);
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);
@@ -137,10 +134,10 @@ public class MessageProcessorServiceUnitTest {
         config.setCleanWorkspace(true);
 
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO(null, null, null, null, 0),
+            scriptExecution -> new ScriptExecutionOutput(null, null, null, null, 0),
             config,
             event -> {
-            }, modelMapper);
+            });
 
         Pair<String, Message> response = processor.processMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"response_topic_suffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)));
         Assertions.assertNull(response);

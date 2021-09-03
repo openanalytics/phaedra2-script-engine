@@ -20,32 +20,42 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime;
 
-import java.nio.file.Path;
-
 /**
- * POJO holding information related to the execution of a script.
- * This information is only needed during execution of the script.
+ * The output of the execution a script.
  */
-public class ScriptExecution {
+public class ScriptExecutionOutput {
 
     private final ScriptExecutionInput scriptExecutionInput;
+    private final String output;
+    private final ResponseStatusCode statusCode;
+    private final String statusMessage;
+    private final int exitCode;
 
-    private Path workspace;
-
-    public ScriptExecution(ScriptExecutionInput scriptExecutionInput) {
+    public ScriptExecutionOutput(ScriptExecutionInput scriptExecutionInput, String output, ResponseStatusCode statusCode, String statusMessage, int exitCode) {
         this.scriptExecutionInput = scriptExecutionInput;
+        this.output = output;
+        this.statusCode = statusCode;
+        this.statusMessage = statusMessage;
+        this.exitCode = exitCode;
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public ResponseStatusCode getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusMessage() {
+        return statusMessage;
+    }
+
+    public int getExitCode() {
+        return exitCode;
     }
 
     public ScriptExecutionInput getScriptExecutionInput() {
         return scriptExecutionInput;
     }
-
-    public Path getWorkspace() {
-        return workspace;
-    }
-
-    public void setWorkspace(Path workspace) {
-        this.workspace = workspace;
-    }
-
 }

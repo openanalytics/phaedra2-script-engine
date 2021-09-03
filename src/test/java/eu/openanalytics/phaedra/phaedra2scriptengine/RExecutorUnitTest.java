@@ -20,10 +20,10 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine;
 
-import eu.openanalytics.phaedra.model.v2.dto.ScriptExecutionInputDTO;
-import eu.openanalytics.phaedra.model.v2.enumeration.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ResponseStatusCode;
 import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecution;
+import eu.openanalytics.phaedra.phaedra2scriptengine.model.runtime.ScriptExecutionInput;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.RExecutor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ public class RExecutorUnitTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -60,7 +60,7 @@ public class RExecutorUnitTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(new ScriptExecutionInput("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);

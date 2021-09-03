@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.phaedra.phaedra2scriptengine;
 
-import eu.openanalytics.phaedra.model.v2.ModelMapper;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.Config;
 import eu.openanalytics.phaedra.phaedra2scriptengine.config.data.EnvConfig;
 import eu.openanalytics.phaedra.phaedra2scriptengine.service.executor.IExecutor;
@@ -86,10 +85,6 @@ public class ScriptEngineWorkerApplication {
         logger.info("Using {} as routing key prefix for the output exchange", config.getOutputRoutingKeyPrefix());
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
 
     @Bean
     public RabbitTemplate rabbitTemplate() {
