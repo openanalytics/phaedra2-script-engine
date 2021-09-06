@@ -3,169 +3,49 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.5.3</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <groupId>eu.openanalytics.phaedra</groupId>
+        <artifactId>phaedra2-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../phaedra2-parent</relativePath>
     </parent>
+    <packaging>pom</packaging>
 
-    <groupId>eu.openanalytics.phaedra</groupId>
-    <artifactId>phaedra2-scriptengine-worker</artifactId>
+    <artifactId>phaedra2-scriptengine</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-
-    <name>phaedra2-scriptengine-worker</name>
-    <description>Script Engine Worker for Phaedra2</description>
+    <name>phaedra2-scriptengine</name>
 
     <properties>
-        <java.version>11</java.version>
-        <testcontainers.version>1.15.3</testcontainers.version>
+        <java.version>16</java.version>
     </properties>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>oa-nexus-snapshots</id>
-            <name>OpenAnalytics Snapshots Repository</name>
-            <url>https://nexus.openanalytics.eu/repository/snapshots</url>
-        </snapshotRepository>
+    <modules>
+        <module>dto/</module>
+        <module>client/</module>
+        <module>worker/</module>
+    </modules>
+
+    <!-- We cannot specify this in the parent POM, as the repositories are needed to fetch the parent pom.    -->
+    <repositories>
+        <!-- Maven queries repositories in the order that they are defined here.
+         Usually, the Maven Central repository is the last one in this order, because it's defined in the super POM.
+         This means that for all dependencies which are downloaded from Maven Central, the custom repositories are
+         queried first, which slows down the build a lot.
+         Therefore we add central as the first repository in this list.
+         This reduces the time to download dependencies on a fresh machine from ~20-30min to 1min
+         See: https://maven.apache.org/ref/3.6.3/maven-model-builder/super-pom.html for the origin of this configuration
+         -->
         <repository>
-            <id>oa-nexus-releases</id>
-            <name>OpenAnalytics Release Repository</name>
-            <url>https://nexus.openanalytics.eu/repository/releases</url>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
-    </distributionManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-json</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <!-- Test Dependencies -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>1.15.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>rabbitmq</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.9.0</version>
-
-                <executions>
-                    <execution>
-                        <id>check-copyright-headers</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-                <configuration>
-                    <header>LICENSE_HEADER</header>
-                    <aggregate>true</aggregate>
-                    <strictCheck>true</strictCheck>
-                    <excludes>
-                        <exclude>**/*.properties</exclude>
-                        <exclude>**/*.yml</exclude>
-                        <exclude>**/*.json</exclude>
-                        <exclude>**/*.raml</exclude>
-                        <exclude>**/*.sh</exclude>
-                        <exclude>**/*.xml</exclude>
-                        <exclude>LICENSE</exclude>
-                        <exclude>LICENSE_HEADER</exclude>
-                        <exclude>README.md</exclude>
-                        <exclude>.gitignore</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.7</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
+        <repository>
+            <id>oa-nexus-snapshots</id>
+            <url>https://nexus.openanalytics.eu/repository/snapshots/</url>
+        </repository>
+    </repositories>
 </project>
