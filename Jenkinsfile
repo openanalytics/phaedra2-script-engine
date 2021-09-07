@@ -83,37 +83,37 @@ pipeline {
             }
         }
 
-        stage('Build Docker image') {
-            steps {
-                dir('server') {
-                    container('builder') {
-
-                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                            sh "mvn -s \$MAVEN_SETTINGS_RSB dockerfile:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-
-                        }
-
-                    }
-                }
-            }
-        }
-
-        stage('Push to OA registry') {
-            steps {
-                dir('server') {
-                    container('builder') {
-                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-
-                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                            sh "mvn -s \$MAVEN_SETTINGS_RSB dockerfile:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-                        }
-                    }
-                }
-            }
-        }
+//        stage('Build Docker image') {
+//            steps {
+//                dir('server') {
+//                    container('builder') {
+//
+//                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+//
+//                            sh "mvn -s \$MAVEN_SETTINGS_RSB dockerfile:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+//
+//                        }
+//
+//                    }
+//                }
+//            }
+//        }
+//
+//        stage('Push to OA registry') {
+//            steps {
+//                dir('server') {
+//                    container('builder') {
+//                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
+//                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
+//
+//                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+//
+//                            sh "mvn -s \$MAVEN_SETTINGS_RSB dockerfile:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         stage('Cache maven repository to S3') {
             steps {
