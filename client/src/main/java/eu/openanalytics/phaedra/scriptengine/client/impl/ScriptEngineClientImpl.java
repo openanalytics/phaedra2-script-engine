@@ -50,7 +50,7 @@ public class ScriptEngineClientImpl implements MessageListener, ScriptEngineClie
             scriptExecution.getTargetRuntime().getRoutingKey(),
             new Message(objectMapper.writeValueAsBytes(scriptExecution.getScriptExecutionInput()))
         );
-       
+
         executionsInProgress.put(scriptExecution.getScriptExecutionInput().getId(), scriptExecution);
     }
 
