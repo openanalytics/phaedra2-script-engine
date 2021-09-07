@@ -120,13 +120,6 @@ public class MessageProcessorService {
             return null;
         }
     }
-////                objectMapper.writeValueAsBytes(new HashMap<>() {{
-//        put("input_id", scriptExecutionResult.getInputId());
-//        put("status_code", scriptExecutionResult.getStatusCode());
-//        put("status_message", scriptExecutionResult.getStatusMessage());
-//        put("exit_code", scriptExecutionResult.getExitCode());
-//        put("output", scriptExecutionResult.getOutput());
-//    }})
 
     /**
      * Constructs the routing key to which the response must be sent.
