@@ -45,9 +45,6 @@ class ConfigIntegrationTest {
     void contextLoads() {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
-            .withPropertyValues(
-                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
-                "spring.rabbitmq.port" + rabbitMQContainer.getAmqpPort())
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -79,6 +76,8 @@ class ConfigIntegrationTest {
 
         this.contextRunner
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1")
@@ -93,6 +92,8 @@ class ConfigIntegrationTest {
 
         this.contextRunner
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
@@ -109,6 +110,8 @@ class ConfigIntegrationTest {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
@@ -124,6 +127,8 @@ class ConfigIntegrationTest {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
@@ -139,6 +144,8 @@ class ConfigIntegrationTest {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=xyz",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
@@ -156,6 +163,8 @@ class ConfigIntegrationTest {
         this.contextRunner
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
