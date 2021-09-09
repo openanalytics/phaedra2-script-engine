@@ -82,43 +82,45 @@ pipeline {
         }
 
         stage('R worker') {
-            steps {
-                dir('r-worker') {
+            stage('Prepare environment') {
+                steps {
+                    dir('r-worker') {
+                        script {
+                            env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
+                            env.REPO = "openanalytics/${env.ARTIFACT_ID}"
+                        }
+                    }
+                }
+            }
 
-                    stage('Prepare environment') {
-                        steps {
-                            script {
-                                env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
-                                env.REPO = "openanalytics/${env.ARTIFACT_ID}"
+            stage('Build Docker image') {
+                steps {
+                    dir('r-worker') {
+                        container('builder') {
+
+                            configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+
+                                sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+
                             }
+
                         }
                     }
 
-                    stage('Build Docker image') {
-                        steps {
-                            container('builder') {
+                }
+            }
 
-                                configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+            stage('Push to OA registry') {
+                steps {
+                    dir('r-worker') {
+                        container('builder') {
+                            sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
+                            sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO}.liquibase || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}.liquibase"
+                            sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
 
-                                    sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+                            configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                                }
-
-                            }
-                        }
-                    }
-
-                    stage('Push to OA registry') {
-                        steps {
-                            container('builder') {
-                                sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                                sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO}.liquibase || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}.liquibase"
-                                sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-
-                                configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                    sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-                                }
+                                sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
                             }
                         }
                     }
