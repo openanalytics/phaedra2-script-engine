@@ -33,7 +33,6 @@ pipeline {
                     env.GROUP_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.groupId -q -DforceStdout").trim()
                     env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
                     env.VERSION = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout").trim()
-                    env.REPO = "openanalytics/${env.ARTIFACT_ID}-server"
                     env.MVN_ARGS = "-Dmaven.repo.local=/home/jenkins/maven-repository --batch-mode"
                 }
             }
@@ -46,7 +45,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                        sh "mvn -s \$MAVEN_SETTINGS_RSB -U clean install -DskipTests -Ddockerfile.skip ${env.MVN_ARGS}"
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB -U clean install -DskipTests -Ddocker.skip ${env.MVN_ARGS}"
 
                     }
 
@@ -60,7 +59,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                        sh "mvn -s \$MAVEN_SETTINGS_RSB test -Ddockerfile.skip ${env.MVN_ARGS}"
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB test -Ddocker.skip ${env.MVN_ARGS}"
 
                     }
 
@@ -74,12 +73,56 @@ pipeline {
 
                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                        sh "mvn -s \$MAVEN_SETTINGS_RSB deploy -DskipTests -Ddockerfile.skip ${env.MVN_ARGS}"
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB deploy -DskipTests -Ddocker.skip ${env.MVN_ARGS}"
 
                     }
 
                 }
             }
+        }
+
+        stage('R worker') {
+            dir('r-worker') {
+
+                stage('Prepare environment') {
+                    steps {
+                        script {
+                            env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
+                            env.REPO = "openanalytics/${env.ARTIFACT_ID}"
+                        }
+                    }
+                }
+
+                stage('Build Docker image') {
+                    steps {
+                        container('builder') {
+
+                            configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+
+                                sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+
+                            }
+
+                        }
+                    }
+                }
+
+                stage('Push to OA registry') {
+                    steps {
+                        container('builder') {
+                            sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
+                            sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO}.liquibase || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}.liquibase"
+                            sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
+
+                            configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+
+                                sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
+                            }
+                        }
+                    }
+                }
+            }
+
         }
 
         stage('Cache maven repository to S3') {
@@ -95,10 +138,10 @@ pipeline {
 
     post {
         success {
-            step([$class: 'JacocoPublisher',
-                  execPattern: '**/target/jacoco.exec',
-                  classPattern: '**/target/classes',
-                  sourcePattern: '**/src/main/java',
+            step([$class          : 'JacocoPublisher',
+                  execPattern     : '**/target/jacoco.exec',
+                  classPattern    : '**/target/classes',
+                  sourcePattern   : '**/src/main/java',
                   exclusionPattern: '**/src/test*'
             ])
         }
