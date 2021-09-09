@@ -20,7 +20,7 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.service.MessagePollerService;
+import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +31,7 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -48,7 +49,7 @@ import java.util.concurrent.TimeoutException;
 
 @Testcontainers
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = ScriptEngineWorkerApplication.class)
+@ContextConfiguration(classes = {ScriptEngineWorkerApplication.class, Configuration.class})
 @TestPropertySource(locations = "classpath:application-integration-test.properties")
 public class MainIntegrationTest {
 
@@ -59,7 +60,10 @@ public class MainIntegrationTest {
     private AmqpAdmin amqpAdmin;
 
     @Autowired
-    private MessagePollerService messagePollerService;
+    private MessageListenerService messagePollerService;
+
+    @Autowired
+    private DirectMessageListenerContainer directMessageListenerContainer;
 
     @Container
     public static final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer("rabbitmq:3-management")
@@ -84,12 +88,12 @@ public class MainIntegrationTest {
         var receivedResponse = new AssertAsync(() -> {
             Message response = rabbitTemplate.receive("scriptengine_output", 3000);
             Assertions.assertNotNull(response);
-            Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"{\\\"output\\\":3}\\n\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
+            Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"noop-output\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
                 new String(response.getBody(), StandardCharsets.UTF_8));
         });
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.noop.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
 
         // wait for response or timeout
         receivedResponse.assertCalled(5000);
@@ -105,15 +109,15 @@ public class MainIntegrationTest {
         var rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.noop.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)));
 
         // sleep a bit
         Thread.sleep(5000);
 
-        // now receive the response and assart that it is still there
+        // now receive the response and assert that it is still there
         Message response = rabbitTemplate.receive("scriptengine_output", 3000);
         Assertions.assertNotNull(response);
-        Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"{\\\"output\\\":3}\\n\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
+        Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"noop-output\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
             new String(response.getBody(), StandardCharsets.UTF_8));
     }
 
@@ -127,24 +131,24 @@ public class MainIntegrationTest {
         var rabbitTemplate = new RabbitTemplate(connectionFactory);
 
         // stop poller
-        messagePollerService.stop();
+        directMessageListenerContainer.stop();
 
         // sleep for current interval to stop
-        Thread.sleep(MessagePollerService.POLLING_TIMEOUT);
+        Thread.sleep(1000);
 
         // send message
-        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.r.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}".getBytes(StandardCharsets.UTF_8)));
+        rabbitTemplate.send("scriptengine_input", "scriptengine.input.fast-lane.noop.v1", new Message("{\"script\": \"output <- input$a + input$b\", \"input\": \"{\\\"a\\\": 1,\\\"b\\\":2}\", \"responseTopicSuffix\": \"calculationService\", \"id\": \"myId\", \"queueTimestamp\": 1024}".getBytes(StandardCharsets.UTF_8)));
 
-        // wait until poller restarts
+        // let message sit in the queue for some time
         Thread.sleep(10000);
 
         // start poller again
-        messagePollerService.start();
+        directMessageListenerContainer.start();
 
         // now receive the response and assert that it is still there
         Message response = rabbitTemplate.receive("scriptengine_output", 10000);
         Assertions.assertNotNull(response);
-        Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"{\\\"output\\\":3}\\n\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
+        Assertions.assertEquals("{\"inputId\":\"myId\",\"output\":\"noop-output\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}",
             new String(response.getBody(), StandardCharsets.UTF_8));
     }
 

@@ -21,11 +21,10 @@
 package eu.openanalytics.phaedra.scriptengine.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
-import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.scriptengine.service.executor.IExecutor;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
 import eu.openanalytics.phaedra.scriptengine.stat.ScriptProcessedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,12 +46,12 @@ public class MessageProcessorService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final Config config;
+    private final EnvConfig config;
     private final IExecutor executor;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public MessageProcessorService(IExecutor executor, Config config, ApplicationEventPublisher applicationEventPublisher) {
+    public MessageProcessorService(IExecutor executor, EnvConfig config, ApplicationEventPublisher applicationEventPublisher) {
         this.executor = executor;
         this.config = config;
         this.applicationEventPublisher = applicationEventPublisher;
@@ -74,9 +73,8 @@ public class MessageProcessorService {
 
         Duration timeInQueue = Duration.between(Instant.ofEpochMilli(input.getQueueTimestamp()), Instant.now());
 
-        var scriptExecution = new ScriptExecution(input);
         try {
-            var scriptExecutionOutput = executor.execute(scriptExecution);
+            var scriptExecutionOutput = executor.execute(input);
             if (scriptExecutionOutput == null) return null;
 
             var response = constructResponse(scriptExecutionOutput);
@@ -92,7 +90,7 @@ public class MessageProcessorService {
     }
 
     /**
-     * Converts the incoming message to a {@link ScriptExecutionInput}
+     * Converts the incoming message to a {@link ScriptExecutionInputDTO}
      *
      * @param message the message to parse
      * @return the parsed message or null when it is invalid

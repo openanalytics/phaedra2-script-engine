@@ -20,10 +20,10 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
-import eu.openanalytics.phaedra.scriptengine.config.data.EnvConfig;
-import eu.openanalytics.phaedra.scriptengine.service.executor.IExecutor;
-import eu.openanalytics.phaedra.scriptengine.service.executor.RExecutor;
+import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutorRegistration;
+import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -33,6 +33,8 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -40,19 +42,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 @EnableAsync
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class ScriptEngineWorkerApplication {
 
-    private final ConnectionFactory connectionFactory;
-    private final EnvConfig envConfig;
-    private final Config config;
+    @Autowired
+    private MessageListenerService messagePollerService;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final EnvConfig envConfig;
 
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(ScriptEngineWorkerApplication.class);
@@ -63,11 +67,8 @@ public class ScriptEngineWorkerApplication {
     private final String inputQueueName;
     private final String outputExchangeName = "scriptengine_output";
 
-    public ScriptEngineWorkerApplication(AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, EnvConfig envConfig, Config config) {
-        this.connectionFactory = connectionFactory;
+    public ScriptEngineWorkerApplication(AmqpAdmin amqpAdmin, EnvConfig envConfig) {
         this.envConfig = envConfig;
-        this.config = config;
-
         inputQueueName = String.format("scriptengine.input.%s.%s.%s", envConfig.getPoolName(), envConfig.getLanguage(), envConfig.getVersion());
 
         // input exchange and queues
@@ -83,12 +84,11 @@ public class ScriptEngineWorkerApplication {
         logger.info("Using {} as name for the input queue", inputQueueName);
         logger.info("Using {} as routing key for the input queue", inputQueueName);
         logger.info("Using {} as name for the output exchange", outputExchangeName);
-        logger.info("Using {} as routing key prefix for the output exchange", config.getOutputRoutingKeyPrefix());
+        logger.info("Using {} as routing key prefix for the output exchange", envConfig.getOutputRoutingKeyPrefix());
     }
 
-
     @Bean
-    public RabbitTemplate rabbitTemplate() {
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setDefaultReceiveQueue(inputQueueName);
         template.setExchange(outputExchangeName);
@@ -96,12 +96,29 @@ public class ScriptEngineWorkerApplication {
     }
 
     @Bean
-    public IExecutor scriptExecutor() {
-        if (envConfig.getLanguage().equalsIgnoreCase("r")) {
-            return new RExecutor(config);
-        } else {
-            throw new IllegalArgumentException(String.format("Unsupported language found %s", envConfig.getLanguage()));
+    public IExecutor scriptExecutor(List<IExecutorRegistration> registrations) {
+        System.out.println("Available registrations: " + registrations.stream().map(IExecutorRegistration::getLanguage).collect(Collectors.toList()));
+
+        for (var registration : registrations) {
+            if (registration.getLanguage().equalsIgnoreCase(envConfig.getLanguage())) {
+                System.out.println("Found a registration for " + registration.getLanguage());
+                return registration.createExecutor();
+            }
         }
+
+        throw new IllegalStateException("No executor found!");
+    }
+
+    @Bean
+    public DirectMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory) {
+        var container = new DirectMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addQueueNames(inputQueueName);
+        container.setMessageListener(messagePollerService);
+        container.setPrefetchCount(250);  // TODO
+        container.setConsumersPerQueue(4);
+//        container.setExclusive(); // TODO
+        return container;
     }
 
     @Bean

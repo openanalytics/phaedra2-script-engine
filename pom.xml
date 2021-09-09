@@ -22,6 +22,8 @@
         <module>dto/</module>
         <module>client/</module>
         <module>worker/</module>
+        <module>r-worker</module>
+        <module>java-stat-worker</module>
     </modules>
 
     <!-- We cannot specify this in the parent POM, as the repositories are needed to fetch the parent pom.    -->

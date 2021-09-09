@@ -18,13 +18,12 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine;
+package eu.openanalytics.phaedra.scriptengine.rworker;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.scriptengine.service.executor.RExecutor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +34,7 @@ public class RExecutorUnitTest {
 
     @Test
     public void basicTest() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
@@ -54,7 +53,7 @@ public class RExecutorUnitTest {
 
     @Test
     public void checkWorkspaceFiles() throws InterruptedException, IOException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(false);
 

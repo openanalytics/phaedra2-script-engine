@@ -18,9 +18,10 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.service.executor;
+package eu.openanalytics.phaedra.scriptengine.executor;
 
-import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 
 /**
@@ -35,6 +36,6 @@ public interface IExecutor {
      * @return the output of the script
      * @throws InterruptedException when the thread is interrupted when waiting for the script to finish.
      */
-    ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException;
+    ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecution) throws InterruptedException, JsonProcessingException;
 
 }

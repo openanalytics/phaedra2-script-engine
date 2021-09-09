@@ -20,13 +20,13 @@
  */
 package eu.openanalytics.phaedra.scriptengine.stat;
 
-import eu.openanalytics.phaedra.scriptengine.service.MessagePollerService;
+import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.stream.Collectors;
 
 /**
  * Service that calculated the "usage-percentage" of this worker.
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * cases where the stopwatch is still running etc.
  * Therefore, a different approach is used:
  * - this service contains a {@link Timer} that is executed every 0.5s
- * - the timer asks the {@link MessagePollerService} whethter it is busy and adds this boolean result to the isBusyPerSecond buffer
+ * - the timer asks the {@link MessageListenerService} whethter it is busy and adds this boolean result to the isBusyPerSecond buffer
  * - isBusyPerSecond is a {@link CircularFifoQueue<Boolean>}, it only keeps the last 120 values added to this buffer
  * - therefore this buffer keeps a history of the last minute whether it was busy.
  * - the @{link getBusyPercentage} can then easily calculate the average usage in the last minute.
@@ -47,13 +47,13 @@ import java.util.stream.Collectors;
 @Service
 public class UserPercentageService {
 
-    private final CircularFifoQueue<Boolean> isBusyPerSecond = new CircularFifoQueue<>(120);
+    private final CircularFifoQueue<Long> isBusyPerSecond = new CircularFifoQueue<>(120);
 
-    public UserPercentageService(MessagePollerService messagePollerService) {
+    public UserPercentageService(MessageListenerService messagePollerService) {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                isBusyPerSecond.add(messagePollerService.isBusy());
+                isBusyPerSecond.add(messagePollerService.getActiveWorkers());
             }
         }, 0, 500);
     }
@@ -62,10 +62,8 @@ public class UserPercentageService {
      * @return the percentage of the last minute this worker was busy.
      */
     public double getBusyPercentage() {
-        var current = isBusyPerSecond.stream().collect(Collectors.toUnmodifiableList());
-        var busyCount = current.stream().filter((el) -> el).count();
-        var totalCount = current.size();
-        return (double) busyCount / (double) totalCount;
+        List<Long> current = isBusyPerSecond.stream().toList();
+        return current.stream().mapToDouble(c -> c).average().orElse(0.0);
     }
 
 }

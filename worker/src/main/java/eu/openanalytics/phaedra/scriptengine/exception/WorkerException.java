@@ -18,7 +18,7 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.service.executor;
+package eu.openanalytics.phaedra.scriptengine.exception;
 
 /**
  * Exception which is not caused by the Script being executed but by any other problem in the worker itself.

@@ -20,7 +20,7 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.service.MessageProcessorService;
@@ -36,13 +36,9 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void basicTest() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config,
+            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            new EnvConfig(),
             event -> {
             });
 
@@ -53,13 +49,9 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void invalidInput() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config,
+            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            new EnvConfig(),
             event -> {
             });
 
@@ -69,13 +61,9 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void invalidInputMissingField() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
-            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
-            config,
+            scriptExecution -> new ScriptExecutionOutputDTO(scriptExecution.getId(), "myOutput", ResponseStatusCode.SUCCESS, "Ok", 0),
+            new EnvConfig(),
             event -> {
             });
 
@@ -94,15 +82,11 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void exceptionInExecutor() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
             scriptExecution -> {
                 throw new RuntimeException("oops");
             },
-            config,
+            new EnvConfig(),
             event -> {
             });
 
@@ -113,13 +97,9 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void executorReturnsNull() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
             scriptExecution -> null,
-            config,
+            new EnvConfig(),
             event -> {
             });
 
@@ -129,13 +109,9 @@ public class MessageProcessorServiceUnitTest {
 
     @Test
     public void executorReturnsInvalidResponse() throws InterruptedException {
-        var config = new Config();
-        config.setWorkspace("/tmp/");
-        config.setCleanWorkspace(true);
-
         var processor = new MessageProcessorService(
             scriptExecution -> new ScriptExecutionOutputDTO(null, null, null, null, 0),
-            config,
+            new EnvConfig(),
             event -> {
             });
 

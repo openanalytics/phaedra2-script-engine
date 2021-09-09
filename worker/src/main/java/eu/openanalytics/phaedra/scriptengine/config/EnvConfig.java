@@ -18,7 +18,7 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.config.data;
+package eu.openanalytics.phaedra.scriptengine.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -86,6 +86,12 @@ public class EnvConfig {
         this.version = version;
     }
 
+    /**
+     * @return the prefix of the topic used in output messages on the output exchange.
+     */
+    public String getOutputRoutingKeyPrefix() {
+        return "scriptengine.output.";
+    }
 }
 
 

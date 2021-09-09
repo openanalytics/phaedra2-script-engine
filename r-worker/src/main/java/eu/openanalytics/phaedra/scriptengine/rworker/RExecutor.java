@@ -18,19 +18,22 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.service.executor;
+package eu.openanalytics.phaedra.scriptengine.rworker;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
+import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
 
 import java.io.IOException;
 
 /**
  * Implemention of {@link IExecutor} that can execute R scripts.
  */
-public class RExecutor extends AbstractExecutor {
+public class RExecutor extends ExternalProcessExecutor {
 
-    public RExecutor(Config config) {
+    public RExecutor(ExternalProcessConfig config) {
         super(config);
     }
 

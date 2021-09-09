@@ -20,12 +20,12 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
+import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.scriptengine.service.executor.AbstractExecutor;
-import eu.openanalytics.phaedra.scriptengine.service.executor.WorkerException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.FileSystemUtils;
@@ -34,15 +34,15 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-public class AbstractExecutorUnitTest {
+public class ExternalScriptExecutorTest {
 
     @Test
     public void basicTest() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -64,10 +64,11 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
-        var output = myExecutor.execute(scriptExecution);
+        var output = myExecutor.execute(scriptExecutionInput);
 
         Assertions.assertEquals("myOutput", output.getOutput());
         Assertions.assertEquals("Ok", output.getStatusMessage());
@@ -77,11 +78,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void scriptProducesNoOutput() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -98,10 +99,11 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
-        var output = myExecutor.execute(scriptExecution);
+        var output = myExecutor.execute(scriptExecutionInput);
 
         Assertions.assertEquals("", output.getOutput());
         Assertions.assertEquals("Script did not create output file!", output.getStatusMessage());
@@ -111,11 +113,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void scriptProducesWorkerException() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -132,10 +134,11 @@ public class AbstractExecutorUnitTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
-        var output = myExecutor.execute(scriptExecution);
+        var output = myExecutor.execute(scriptExecutionInput);
 
         Assertions.assertEquals("", output.getOutput());
         Assertions.assertEquals("An error occurred in the worker while processing the script.", output.getStatusMessage());
@@ -145,11 +148,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void testWorkspaceFiles() throws InterruptedException, IOException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(false);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -163,7 +166,7 @@ public class AbstractExecutorUnitTest {
             @Override
             protected int executeScript(ScriptExecution scriptExecution) throws WorkerException {
                 try {
-                    Files.write(scriptExecution.getWorkspace().resolve("output.json"), "myOutput".getBytes(StandardCharsets.UTF_8));
+                    Files.writeString(scriptExecution.getWorkspace().resolve("output.json"), "myOutput");
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -190,11 +193,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void testCleanWorkspaceEvenIfWorkerException() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -220,11 +223,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void testCleanWorkspaceEvenIfException() {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";
@@ -251,11 +254,11 @@ public class AbstractExecutorUnitTest {
 
     @Test
     public void testCleanWorkspaceEvenIfExceptionInSetupPhase() throws InterruptedException {
-        var config = new Config();
+        var config = new ExternalProcessConfig();
         config.setWorkspace("/tmp/");
         config.setCleanWorkspace(true);
 
-        var myExecutor = new AbstractExecutor(config) {
+        var myExecutor = new ExternalProcessExecutor(config) {
             @Override
             protected String getFullScript(ScriptExecution scriptExecution) {
                 return "my-header\n" + scriptExecution.getScriptExecutionInput().getScript() + "\nmy-footer\n";

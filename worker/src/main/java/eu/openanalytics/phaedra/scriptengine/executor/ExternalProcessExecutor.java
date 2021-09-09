@@ -18,11 +18,13 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.service.executor;
+package eu.openanalytics.phaedra.scriptengine.executor;
 
-import eu.openanalytics.phaedra.scriptengine.config.data.Config;
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,21 +37,25 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 /**
- * Abstract executor that contains the global logic for executing a script.
+ * Abstract executor that contains the global logic for executing a script using an external process.
  * This can be used to implement {@link IExecutor} for different languages/runtimes.
  */
-public abstract class AbstractExecutor implements IExecutor {
+public abstract class ExternalProcessExecutor implements IExecutor {
 
-    private final Config config;
+    private final ExternalProcessConfig config;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public AbstractExecutor(Config config) {
+    public ExternalProcessExecutor(ExternalProcessConfig config) {
         this.config = config;
     }
 
     @Override
-    public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
+    public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws InterruptedException {
+        return execute(new ScriptExecution(scriptExecutionInput));
+    }
+
+    public ScriptExecutionOutputDTO execute( ScriptExecution scriptExecution) throws InterruptedException {
         try {
             setupEnv(scriptExecution);
 

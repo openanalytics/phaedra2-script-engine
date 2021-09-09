@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.testcontainers.containers.RabbitMQContainer;
@@ -43,7 +44,7 @@ class ConfigIntegrationTest {
     @Test
     void contextLoads() {
         this.contextRunner
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
                 "spring.rabbitmq.port" + rabbitMQContainer.getAmqpPort())
@@ -55,8 +56,8 @@ class ConfigIntegrationTest {
             });
 
         this.contextRunner
-            .withPropertyValues("phaedra2.script-engine-worker.env.language=r")
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withPropertyValues("phaedra2.script-engine-worker.env.language=noop")
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -66,9 +67,9 @@ class ConfigIntegrationTest {
 
         this.contextRunner
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane")
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -78,10 +79,11 @@ class ConfigIntegrationTest {
 
         this.contextRunner
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1")
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
@@ -91,48 +93,51 @@ class ConfigIntegrationTest {
 
         this.contextRunner
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=test")
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
-                assertThat(context.getStartupFailure().getCause().getCause().getMessage())
+                assertThat(context.getStartupFailure().getCause().getMessage())
                     .contains("Incorrect configuration detected: phaedra2.script-engine-worker.workspace must start and end with /");
             });
 
         this.contextRunner
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=/test")
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
-                assertThat(context.getStartupFailure().getCause().getCause().getMessage())
+                assertThat(context.getStartupFailure().getCause().getMessage())
                     .contains("Incorrect configuration detected: phaedra2.script-engine-worker.workspace must start and end with /");
             });
 
         this.contextRunner
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=/test/")
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
-                assertThat(context.getStartupFailure().getCause().getCause().getMessage())
+                assertThat(context.getStartupFailure().getCause().getMessage())
                     .contains("Incorrect configuration detected: phaedra2.script-engine-worker.workspace does not exists or is not a directory");
             });
 
         this.contextRunner
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
                 "phaedra2.script-engine-worker.env.language=xyz",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
@@ -140,22 +145,24 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.workspace=/tmp/",
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
                 "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
                     .hasFailed();
-                assertThat(context.getStartupFailure().getCause().getCause().getCause().getCause().getMessage())
-                    .contains("Unsupported language found xyz");
+                assertThat(context.getStartupFailure().getCause().getCause().getCause().getCause().getCause().getMessage())
+                    .contains("No executor found!");
             });
 
         this.contextRunner
-            .withUserConfiguration(ScriptEngineWorkerApplication.class)
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withPropertyValues(
-                "phaedra2.script-engine-worker.env.language=r",
+                "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=/tmp/",
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
                 "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context).hasNotFailed();
             });
