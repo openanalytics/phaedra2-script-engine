@@ -26,7 +26,6 @@ public class ScriptExecutionOutputDTO {
     @NonNull
     Integer exitCode;
 
-    // TODO camelcase
     public ScriptExecutionOutputDTO(@JsonProperty(value = "inputId", required = true) @NonNull String inputId,
                                     @JsonProperty(value = "output", required = true) @NonNull String output,
                                     @JsonProperty(value = "statusCode", required = true) @NonNull ResponseStatusCode statusCode,

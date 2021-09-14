@@ -40,6 +40,7 @@ public class ScriptEngineClientAutoConfiguration {
         container.addQueueNames(clientConfig.getResponseQueueName());
         container.setMessageListener(scriptEngineClient());
         container.setPrefetchCount(100);  // TODO
+//        container.setConsumersPerQueue(); // TODO
         return container;
     }
 

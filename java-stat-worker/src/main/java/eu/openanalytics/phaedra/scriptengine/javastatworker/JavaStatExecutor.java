@@ -20,17 +20,14 @@ package eu.openanalytics.phaedra.scriptengine.javastatworker;
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
-import org.apache.commons.math.stat.StatUtils;
 
-import java.util.List;
+import java.util.HashMap;
 
 public class JavaStatExecutor implements IExecutor {
 
@@ -42,67 +39,45 @@ public class JavaStatExecutor implements IExecutor {
 
     @Override
     public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws InterruptedException, JsonProcessingException {
-        var input = objectMapper.readValue(scriptExecutionInput.getInput(), Input.class);
-        var formula = scriptExecutionInput.getScript();
+        System.out.println(scriptExecutionInput);
+
+        var output = new Output();
+        output.addPlateOutput(1.42f);
+        output.addWelltypeOutput("LC", 2.42f);
+        output.addWelltypeOutput("HC", 3.42f);
 
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
             .statusCode(ResponseStatusCode.SUCCESS)
             .statusMessage("Ok")
-            .exitCode(0);
-
-        switch (formula) {
-            case "MAX" -> res.output(objectMapper.writeValueAsString(new Output(StatUtils.max(input.getValues()))));
-            case "MIN" -> res.output(objectMapper.writeValueAsString(new Output(StatUtils.min(input.getValues()))));
-            case "SUM" -> res.output(objectMapper.writeValueAsString(new Output(StatUtils.sum(input.getValues()))));
-        }
+            .exitCode(0)
+            .output(objectMapper.writeValueAsString(output));
 
         return res.build();
     }
 
     public static class Output {
-        private double output;
 
-        public Output(double output) {
-            this.output = output;
-        }
+        private final static String PLATE_OUTPUT_KEY = "__PLATE_OUTPUT_KEY";
 
-        public double getOutput() {
+        private final HashMap<String, Float> output;
+
+        public HashMap<String, Float> getOutput() {
             return output;
         }
 
-        public void setOutput(double output) {
-            this.output = output;
+        public Output() {
+            this.output = new HashMap<>();
         }
+
+        public void addWelltypeOutput(String welltype, Float value) {
+            output.put(welltype, value);
+        }
+
+        public void addPlateOutput(Float value) {
+            output.put(PLATE_OUTPUT_KEY, value);
+        }
+
     }
-
-    public static class Input {
-
-        private double[] values;
-        private List<String> wellTypes;
-
-        public double[] getValues() {
-            return values;
-        }
-
-        public void setValues(double[] values) {
-            this.values = values;
-        }
-
-        public List<String> getWellTypes() {
-            return wellTypes;
-        }
-
-        public void setWellTypes(List<String> wellTypes) {
-            this.wellTypes = wellTypes;
-        }
-
-        @JsonCreator
-        public Input(@JsonProperty(value = "values") double[] values, @JsonProperty(value = "wellTypes") List<String> wellTypes) {
-            this.values = values;
-            this.wellTypes = wellTypes;
-        }
-    }
-
 
 }
