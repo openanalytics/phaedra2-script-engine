@@ -42,9 +42,9 @@ public class JavaStatExecutor implements IExecutor {
         System.out.println(scriptExecutionInput);
 
         var output = new Output();
-        output.addPlateOutput(1.42f);
-        output.addWelltypeOutput("LC", 2.42f);
-        output.addWelltypeOutput("HC", 3.42f);
+        output.setPlateValue(1.42f);
+        output.addWelltypeValue("LC", 2.42f);
+        output.addWelltypeValue("HC", 3.42f);
 
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
@@ -58,24 +58,24 @@ public class JavaStatExecutor implements IExecutor {
 
     public static class Output {
 
-        private final static String PLATE_OUTPUT_KEY = "__PLATE_OUTPUT_KEY";
+        private Float plateValue = null;
 
-        private final HashMap<String, Float> output;
+        private final HashMap<String, Float> welltypeValues = new HashMap<>();
 
-        public HashMap<String, Float> getOutput() {
-            return output;
+        public void addWelltypeValue(String welltype, Float value) {
+            welltypeValues.put(welltype, value);
         }
 
-        public Output() {
-            this.output = new HashMap<>();
+        public void setPlateValue(Float value) {
+            plateValue = value;
         }
 
-        public void addWelltypeOutput(String welltype, Float value) {
-            output.put(welltype, value);
+        public Float getPlateValue() {
+            return plateValue;
         }
 
-        public void addPlateOutput(Float value) {
-            output.put(PLATE_OUTPUT_KEY, value);
+        public HashMap<String, Float> getWelltypeValues() {
+            return welltypeValues;
         }
 
     }
