@@ -26,25 +26,53 @@ import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JavaStatExecutor implements IExecutor {
 
     private final ObjectMapper objectMapper;
 
-    public JavaStatExecutor(ObjectMapper objectMapper) {
+    private final Map<String, StatCalculator> statCalculators = new HashMap<>();
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    public JavaStatExecutor(ObjectMapper objectMapper, List<StatCalculator> statCalculators) {
         this.objectMapper = objectMapper;
+        for (var statCalculator : statCalculators) {
+            if (this.statCalculators.containsKey(statCalculator.getName())) {
+                throw new IllegalArgumentException("TODO"); // TODO
+            }
+            logger.info(String.format("Mapping formula name \"%s\" to class %s", statCalculator.getName(), statCalculator.getClass().getSimpleName()));
+            this.statCalculators.put(statCalculator.getName(), statCalculator);
+        }
     }
 
     @Override
     public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws InterruptedException, JsonProcessingException {
-        System.out.println(scriptExecutionInput);
+        logger.info(String.format("ScriptExecutionInput: %s", scriptExecutionInput));
 
-        var output = new Output();
-        output.setPlateValue(1.42f);
-        output.addWelltypeValue("LC", 2.42f);
-        output.addWelltypeValue("HC", 3.42f);
+        var input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
+
+        var formula = scriptExecutionInput.getScript();
+
+        if (!formula.startsWith("JavaStat::")) {
+            throw new IllegalArgumentException("TODO"); // TODO
+        }
+
+        var statName = formula.replace("JavaStat::", "");
+        var calculator = statCalculators.get(statName);
+
+        CalculationOutput output;
+        if (calculator == null) {
+            throw new IllegalArgumentException("TODO"); // TODO
+        } else {
+            output = calculator.calculate(input);
+        }
 
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
@@ -56,28 +84,6 @@ public class JavaStatExecutor implements IExecutor {
         return res.build();
     }
 
-    public static class Output {
 
-        private Float plateValue = null;
-
-        private final HashMap<String, Float> welltypeValues = new HashMap<>();
-
-        public void addWelltypeValue(String welltype, Float value) {
-            welltypeValues.put(welltype, value);
-        }
-
-        public void setPlateValue(Float value) {
-            plateValue = value;
-        }
-
-        public Float getPlateValue() {
-            return plateValue;
-        }
-
-        public HashMap<String, Float> getWelltypeValues() {
-            return welltypeValues;
-        }
-
-    }
 
 }

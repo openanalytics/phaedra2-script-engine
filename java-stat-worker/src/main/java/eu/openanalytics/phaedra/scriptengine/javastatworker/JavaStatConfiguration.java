@@ -6,11 +6,13 @@ import eu.openanalytics.phaedra.scriptengine.executor.IExecutorRegistration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class JavaStatConfiguration {
 
     @Bean
-    public IExecutorRegistration rExecutorRegistration(ObjectMapper objectMapper) {
+    public IExecutorRegistration rExecutorRegistration(ObjectMapper objectMapper, List<StatCalculator> statCalculator) {
         return new IExecutorRegistration() {
             @Override
             public String getLanguage() {
@@ -19,7 +21,7 @@ public class JavaStatConfiguration {
 
             @Override
             public IExecutor createExecutor() {
-                return new JavaStatExecutor(objectMapper);
+                return new JavaStatExecutor(objectMapper, statCalculator);
             }
 
             @Override
