@@ -157,7 +157,7 @@ class ConfigIntegrationTest {
                 assertThat(context)
                     .hasFailed();
                 assertThat(context.getStartupFailure().getCause().getCause().getCause().getCause().getCause().getMessage())
-                    .contains("No executor found!");
+                    .contains("No matching IExecutorRegistration found, searching for xyz");
             });
 
         this.contextRunner
