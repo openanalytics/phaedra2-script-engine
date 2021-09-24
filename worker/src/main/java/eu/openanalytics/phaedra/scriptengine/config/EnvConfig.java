@@ -36,6 +36,8 @@ public class EnvConfig {
     private String language;
     private String poolName;
     private String version;
+    private Integer prefetchCount = 250;
+    private Integer consumers = 4;
 
     @PostConstruct
     public void init() {
@@ -91,6 +93,28 @@ public class EnvConfig {
      */
     public String getOutputRoutingKeyPrefix() {
         return "scriptengine.output.";
+    }
+
+    /**
+     * @return the number of messages to prefetch from the queue.
+     */
+    public Integer getPrefetchCount() {
+        return prefetchCount;
+    }
+
+    public void setPrefetchCount(Integer prefetchCount) {
+        this.prefetchCount = prefetchCount;
+    }
+
+    /**
+     * @return the number of consumers to create for the input queue. This corresponds to the number of workers working on incoming messages.
+     */
+    public Integer getConsumers() {
+        return consumers;
+    }
+
+    public void setConsumers(Integer consumers) {
+        this.consumers = consumers;
     }
 }
 

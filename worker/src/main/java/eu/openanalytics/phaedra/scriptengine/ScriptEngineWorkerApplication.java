@@ -96,28 +96,41 @@ public class ScriptEngineWorkerApplication {
     }
 
     @Bean
-    public IExecutor scriptExecutor(List<IExecutorRegistration> registrations) {
-        System.out.println("Available registrations: " + registrations.stream().map(IExecutorRegistration::getLanguage).collect(Collectors.toList()));
+    public IExecutorRegistration executorRegistration(List<IExecutorRegistration> registrations) {
+        logger.info(String.format("Available executors: %s", registrations.stream().map(ex -> String.format("lang: %s, concurrency: %s", ex.getLanguage(), ex.allowConcurrency())).collect(Collectors.toList())));
 
         for (var registration : registrations) {
             if (registration.getLanguage().equalsIgnoreCase(envConfig.getLanguage())) {
-                System.out.println("Found a registration for " + registration.getLanguage());
-                return registration.createExecutor();
+                logger.info(String.format("Configured to use the %s executor", registration.getLanguage()));
+                return registration;
             }
         }
 
-        throw new IllegalStateException("No executor found!");
+        throw new IllegalStateException(String.format("No matching IExecutorRegistration found, searching for %s", envConfig.getLanguage()));
     }
 
     @Bean
-    public DirectMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory) {
+    public IExecutor scriptExecutor(IExecutorRegistration executorRegistration) {
+        return executorRegistration.createExecutor();
+    }
+
+    @Bean
+    public DirectMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory, IExecutorRegistration executorRegistration, EnvConfig envConfig) {
         var container = new DirectMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addQueueNames(inputQueueName);
         container.setMessageListener(messagePollerService);
-        container.setPrefetchCount(250);  // TODO
-        container.setConsumersPerQueue(4);
-//        container.setExclusive(); // TODO
+
+        if (executorRegistration.allowConcurrency()) {
+            logger.info(String.format("Enabling concurrency: [preFetchCount: %s, consumers: %s]", envConfig.getPrefetchCount(), envConfig.getConsumers() ));
+            container.setPrefetchCount(envConfig.getPrefetchCount());
+            container.setConsumersPerQueue(envConfig.getConsumers());
+        } else {
+            logger.info("Disabling concurrency: only consuming one message a time (ignoring preFetchCount and consumer settings)");
+            container.setPrefetchCount(0);
+            container.setConsumersPerQueue(1);
+            container.setExclusive(true);
+        }
         return container;
     }
 

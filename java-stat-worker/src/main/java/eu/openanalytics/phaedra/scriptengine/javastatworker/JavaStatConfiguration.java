@@ -26,7 +26,7 @@ public class JavaStatConfiguration {
 
             @Override
             public Boolean allowConcurrency() {
-                return false;
+                return true;
             }
         };
     }
