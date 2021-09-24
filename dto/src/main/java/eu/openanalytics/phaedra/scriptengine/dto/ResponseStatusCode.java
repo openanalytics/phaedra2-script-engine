@@ -6,5 +6,6 @@ package eu.openanalytics.phaedra.scriptengine.dto;
 public enum ResponseStatusCode {
     SUCCESS,
     WORKER_INTERNAL_ERROR,
-    SCRIPT_ERROR
+    SCRIPT_ERROR,
+    BAD_REQUEST
 }

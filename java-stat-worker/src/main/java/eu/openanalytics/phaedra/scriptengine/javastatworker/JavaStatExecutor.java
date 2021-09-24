@@ -53,43 +53,66 @@ public class JavaStatExecutor implements IExecutor {
     }
 
     @Override
-    public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws InterruptedException, JsonProcessingException {
-        logger.info(String.format("ScriptExecutionInput: %s", scriptExecutionInput));
+    public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) {
+        try {
+            var input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
 
-        var input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
+            var formula = scriptExecutionInput.getScript();
 
-        var formula = scriptExecutionInput.getScript();
-
-        if (!formula.startsWith("JavaStat::")) {
-            throw new IllegalArgumentException("TODO"); // TODO
-        }
-
-        var statName = formula.replace("JavaStat::", "");
-        var calculator = statCalculators.get(statName);
-
-        var outputBuilder = CalculationOutput.builder();
-        if (calculator == null) {
-            throw new IllegalArgumentException("TODO"); // TODO
-        } else {
-            if (input.isPlateStat()) {
-                outputBuilder.plateValue(calculator.calculateForPlate(input));
+            if (!formula.startsWith("JavaStat::")) {
+                return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid formula: does not start with \"JavaStat::\"");
             }
-            if (input.isWelltypeStat()) {
-                for (var group : input.getValuesByWelltype().entrySet()) {
-                    var value = calculator.calculateForWelltype(input, group.getKey(), group.getValue());
-                    outputBuilder.addWelltypeValue(group.getKey(), value);
+
+            var statName = formula.replace("JavaStat::", "");
+            var calculator = statCalculators.get(statName);
+
+            if (calculator == null) {
+                return error(scriptExecutionInput, ResponseStatusCode.SCRIPT_ERROR, "Invalid formula: no calculator found for this formula: \"%s\"");
+            }
+
+            logger.info(String.format("Executing ScriptExecutionInput: [id: %s, calculator: %s] ", scriptExecutionInput.getId(), calculator.getName()));
+            var outputBuilder = CalculationOutput.builder();
+
+            try {
+                if (input.isPlateStat()) {
+                    outputBuilder.plateValue(calculator.calculateForPlate(input));
                 }
+                if (input.isWelltypeStat()) {
+                    for (var group : input.getValuesByWelltype().entrySet()) {
+                        var value = calculator.calculateForWelltype(input, group.getKey(), group.getValue());
+                        outputBuilder.addWelltypeValue(group.getKey(), value);
+                    }
+                }
+            } catch (Throwable ex) {
+                return error(scriptExecutionInput, ResponseStatusCode.SCRIPT_ERROR, "Exception during execution of stat");
             }
-        }
 
+            var res = ScriptExecutionOutputDTO.builder()
+                .inputId(scriptExecutionInput.getId())
+                .statusCode(ResponseStatusCode.SUCCESS)
+                .statusMessage("Ok")
+                .exitCode(0)
+                .output(objectMapper.writeValueAsString(outputBuilder.build()));
+
+            logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: SUCCESS] ", scriptExecutionInput.getId(), calculator.getName()));
+            return res.build();
+        } catch (JsonProcessingException ex) {
+            return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid input format");
+        }
+    }
+
+    private ScriptExecutionOutputDTO error(ScriptExecutionInputDTO scriptExecutionInput, ResponseStatusCode statusCode, String statusMessage) {
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
-            .statusCode(ResponseStatusCode.SUCCESS)
-            .statusMessage("Ok")
+            .statusCode(statusCode)
+            .statusMessage(statusMessage)
             .exitCode(0)
-            .output(objectMapper.writeValueAsString(outputBuilder.build()));
+            .build();
 
-        return res.build();
+        logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: %s, statusMessage] ", scriptExecutionInput.getId(), statusCode, statusMessage));
+        return res;
+
     }
+
 
 }
