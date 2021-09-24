@@ -5,6 +5,9 @@ import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.springframework.stereotype.Component;
 
+/**
+ * @see <a href="https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/stat/descriptive/moment/Skewness.html">https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/stat/descriptive/moment/Skewness.html</a>
+ */
 @Component
 public class SkewnessCalculator implements StatCalculator {
 

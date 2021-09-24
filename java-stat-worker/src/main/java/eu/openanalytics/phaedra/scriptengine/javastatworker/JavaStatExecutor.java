@@ -20,7 +20,9 @@ package eu.openanalytics.phaedra.scriptengine.javastatworker;
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
@@ -45,7 +47,7 @@ public class JavaStatExecutor implements IExecutor {
         this.objectMapper = objectMapper;
         for (var statCalculator : statCalculators) {
             if (this.statCalculators.containsKey(statCalculator.getName())) {
-                throw new IllegalArgumentException("TODO"); // TODO
+                throw new IllegalArgumentException(String.format("Found duplicate StatCalculator: %s", statCalculator.getName()));
             }
             logger.info(String.format("Mapping formula name \"%s\" to class %s", statCalculator.getName(), statCalculator.getClass().getSimpleName()));
             this.statCalculators.put(statCalculator.getName(), statCalculator);
@@ -53,7 +55,7 @@ public class JavaStatExecutor implements IExecutor {
     }
 
     @Override
-    public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) {
+    public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws JsonProcessingException {
         try {
             var input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
 
@@ -67,7 +69,7 @@ public class JavaStatExecutor implements IExecutor {
             var calculator = statCalculators.get(statName);
 
             if (calculator == null) {
-                return error(scriptExecutionInput, ResponseStatusCode.SCRIPT_ERROR, "Invalid formula: no calculator found for this formula: \"%s\"");
+                return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, String.format("Invalid formula: no calculator found for this formula: \"%s\"", statName));
             }
 
             logger.info(String.format("Executing ScriptExecutionInput: [id: %s, calculator: %s] ", scriptExecutionInput.getId(), calculator.getName()));
@@ -96,17 +98,18 @@ public class JavaStatExecutor implements IExecutor {
 
             logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: SUCCESS] ", scriptExecutionInput.getId(), calculator.getName()));
             return res.build();
-        } catch (JsonProcessingException ex) {
+        } catch (JsonParseException | JsonMappingException ex) {
             return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid input format");
         }
     }
 
-    private ScriptExecutionOutputDTO error(ScriptExecutionInputDTO scriptExecutionInput, ResponseStatusCode statusCode, String statusMessage) {
+    private ScriptExecutionOutputDTO error(ScriptExecutionInputDTO scriptExecutionInput, ResponseStatusCode statusCode, String statusMessage) throws JsonProcessingException {
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
             .statusCode(statusCode)
             .statusMessage(statusMessage)
             .exitCode(0)
+            .output(objectMapper.writeValueAsString(CalculationOutput.builder().build()))
             .build();
 
         logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: %s, statusMessage] ", scriptExecutionInput.getId(), statusCode, statusMessage));

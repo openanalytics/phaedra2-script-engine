@@ -5,6 +5,10 @@ import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.springframework.stereotype.Component;
 
+/**
+ * Kurtosis Statistic Calculator.
+ * @see <a href="https://en.wikipedia.org/wiki/Kurtosis>https://en.wikipedia.org/wiki/Kurtosis</a>
+ */
 @Component
 public class KurtosisCalculator implements StatCalculator {
 

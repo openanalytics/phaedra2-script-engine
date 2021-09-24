@@ -32,27 +32,21 @@ public class CalculationOutput {
             return this;
         }
 
-        public CalculationOutputBuilder roundedPateValue(double plateValue) {
-            this.plateValue = (float) StatUtils.round(plateValue, 2); // TODO
-            return this;
-        }
-
-        public CalculationOutputBuilder addWelltypeValue(String wellType, Double value) {
-            return addWelltypeValue(wellType, value.floatValue());
-        }
-
-        public CalculationOutputBuilder addWelltypeValue(String wellType, Float value) {
+        public CalculationOutputBuilder addWelltypeValue(String wellType, Number value) {
             if (welltypeValues.containsKey(wellType)) {
-                throw new IllegalArgumentException("TODO"); // TODO
+                throw new IllegalArgumentException("This output already contains a value for this welltype");
             }
-            welltypeValues.put(wellType, value); // TODO
+            if (value != null) {
+                welltypeValues.put(wellType, value.floatValue());
+            } else {
+                welltypeValues.put(wellType, null);
+            }
             return this;
         }
 
         public CalculationOutput build() {
             return new CalculationOutput(plateValue, welltypeValues);
         }
-
 
     }
 

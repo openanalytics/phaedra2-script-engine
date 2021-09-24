@@ -5,6 +5,9 @@ import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.springframework.stereotype.Component;
 
+/**
+ * https://en.wikipedia.org/wiki/Coefficient_of_variation  Statistic Calculator.
+ */
 @Component
 public class CvCalculator implements StatCalculator {
 

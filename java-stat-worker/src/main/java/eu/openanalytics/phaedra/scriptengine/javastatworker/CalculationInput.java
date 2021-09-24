@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.scriptengine.javastatworker;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,9 +23,14 @@ public class CalculationInput {
     private final double[] featureValues;
     private final Map<String, double[]> groupedValues = new HashMap<>();
 
-    public CalculationInput(String lowWelltype, String highWelltype, List<String> welltypes, Boolean isPlateStat, Boolean isWelltypeStat, List<Float> featureValues) {
+    public CalculationInput(@JsonProperty(value = "lowWelltype", required = true) String lowWelltype,
+                            @JsonProperty(value = "highWelltype", required = true) String highWelltype,
+                            @JsonProperty(value = "welltypes", required = true) List<String> welltypes,
+                            @JsonProperty(value = "isPlateStat", required = true) Boolean isPlateStat,
+                            @JsonProperty(value = "isWelltypeStat", required = true) Boolean isWelltypeStat,
+                            @JsonProperty(value = "featureValues", required = true) List<Float> featureValues) {
         if (welltypes.size() != featureValues.size()) {
-            throw new IllegalArgumentException("TODO");
+            throw new IllegalArgumentException("Size of welltypes and featureValues does not match!");
         }
 
         this.lowWelltype = lowWelltype;

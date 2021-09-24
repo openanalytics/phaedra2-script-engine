@@ -6,6 +6,9 @@ import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.springframework.stereotype.Component;
 
+/**
+ * @see <a href="https://en.wikipedia.org/wiki/Signal-to-noise_statistic">https://en.wikipedia.org/wiki/Signal-to-noise_statistic</a>
+ */
 @Component
 public class SnCalculator implements StatCalculator {
 
@@ -20,7 +23,7 @@ public class SnCalculator implements StatCalculator {
         double[] highs = input.getHighWelltypeValues();
 
         if (lows == null || lows.length == 0 || highs == null || highs.length == 0)
-            throw new IllegalStateException("TODO");
+            throw new IllegalStateException("Invalid set of lows and highs");
 
         DescriptiveStatistics lowStats = StatUtils.createStats(lows);
         DescriptiveStatistics highStats = StatUtils.createStats(highs);
