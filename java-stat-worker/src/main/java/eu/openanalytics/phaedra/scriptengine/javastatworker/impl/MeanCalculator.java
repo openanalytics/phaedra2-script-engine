@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.scriptengine.javastatworker.impl;
 
 import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationInput;
-import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationOutput;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import org.apache.commons.math.stat.StatUtils;
 import org.springframework.stereotype.Component;
@@ -15,12 +14,16 @@ public class MeanCalculator implements StatCalculator {
     }
 
     @Override
-    public CalculationOutput calculate(CalculationInput calculationInput) {
-        var outputBuilder = CalculationOutput.builder();
-        for (var group : calculationInput.getGroupedValues().entrySet()) {
-            var mean = StatUtils.mean(group.getValue());
-            outputBuilder.addWelltypeValue(group.getKey(), mean);
-        }
-        return outputBuilder.build();
+    public Double calculateForPlate(CalculationInput input) {
+        return calculate(input.getPlateValues());
+    }
+
+    @Override
+    public Double calculateForWelltype(CalculationInput input, String welltype, double[] values) {
+        return calculate(values);
+    }
+
+    private double calculate(double[] values) {
+        return StatUtils.mean(values);
     }
 }

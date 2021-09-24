@@ -12,18 +12,24 @@ public class CalculationInput {
 
     private final String highWelltype;
 
-    private final double[] featureValues;
     private final List<String> welltypes;
 
+    private final Boolean isPlateStat;
+    private final Boolean isWelltypeStat;
+
+    // calculated/converted values
+    private final double[] featureValues;
     private final Map<String, double[]> groupedValues = new HashMap<>();
 
-    public CalculationInput(String lowWelltype, String highWelltype, List<String> welltypes, List<Float> featureValues) {
+    public CalculationInput(String lowWelltype, String highWelltype, List<String> welltypes, Boolean isPlateStat, Boolean isWelltypeStat, List<Float> featureValues) {
         if (welltypes.size() != featureValues.size()) {
             throw new IllegalArgumentException("TODO");
         }
 
         this.lowWelltype = lowWelltype;
         this.highWelltype = highWelltype;
+        this.isPlateStat = isPlateStat;
+        this.isWelltypeStat = isWelltypeStat;
         this.featureValues = featureValues.stream().mapToDouble(f -> f).toArray();
         this.welltypes = welltypes;
 
@@ -40,7 +46,7 @@ public class CalculationInput {
         groupedValuesList.forEach((k, v) -> groupedValues.put(k, v.stream().mapToDouble(f -> f).toArray()));
     }
 
-    public double[] getFeatureValues() {
+    public double[] getPlateValues() {
         return featureValues;
     }
 
@@ -56,20 +62,27 @@ public class CalculationInput {
         return lowWelltype;
     }
 
-    public double[] getLowWellFeatures() {
-        return getFeaturesOfWelltype(lowWelltype);
+    public double[] getLowWelltypeValues() {
+        return getValuesByWelltype(lowWelltype);
     }
 
-    public double[] getHighWellFeatures() {
-        return getFeaturesOfWelltype(highWelltype);
+    public double[] getHighWelltypeValues() {
+        return getValuesByWelltype(highWelltype);
     }
 
-    public double[] getFeaturesOfWelltype(String welltype) {
+    public double[] getValuesByWelltype(String welltype) {
         return groupedValues.get(welltype);
     }
 
-    public Map<String, double[]> getGroupedValues() {
+    public Map<String, double[]> getValuesByWelltype() {
         return groupedValues;
     }
 
+    public Boolean isPlateStat() {
+        return isPlateStat;
+    }
+
+    public Boolean isWelltypeStat() {
+        return isWelltypeStat;
+    }
 }

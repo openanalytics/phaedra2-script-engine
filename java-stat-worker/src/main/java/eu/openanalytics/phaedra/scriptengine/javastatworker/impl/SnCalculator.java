@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.scriptengine.javastatworker.impl;
 
 import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationInput;
-import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationOutput;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
@@ -16,9 +15,9 @@ public class SnCalculator implements StatCalculator {
     }
 
     @Override
-    public CalculationOutput calculate(CalculationInput calculationInput) {
-        double[] lows = calculationInput.getLowWellFeatures();
-        double[] highs = calculationInput.getHighWellFeatures();
+    public Double calculateForPlate(CalculationInput input) {
+        double[] lows = input.getLowWelltypeValues();
+        double[] highs = input.getHighWelltypeValues();
 
         if (lows == null || lows.length == 0 || highs == null || highs.length == 0)
             throw new IllegalStateException("TODO");
@@ -29,9 +28,12 @@ public class SnCalculator implements StatCalculator {
         double value = highStats.getMean() - lowStats.getMean();
         value = value / lowStats.getStandardDeviation();
 
-        return CalculationOutput.builder()
-            .roundedPateValue(value)
-            .build();
+        return StatUtils.round(value, 2);
+    }
+
+    @Override
+    public Double calculateForWelltype(CalculationInput input, String welltype, double[] values) {
+        return null;
     }
 
 }

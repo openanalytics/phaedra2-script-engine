@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.scriptengine.javastatworker.impl;
 
 import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationInput;
-import eu.openanalytics.phaedra.scriptengine.javastatworker.CalculationOutput;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.StatUtils;
 import org.springframework.stereotype.Component;
@@ -15,12 +14,16 @@ public class SkewnessCalculator implements StatCalculator {
     }
 
     @Override
-    public CalculationOutput calculate(CalculationInput calculationInput) {
-        var outputBuilder = CalculationOutput.builder();
-        for (var group : calculationInput.getGroupedValues().entrySet()) {
-            var skewness = StatUtils.createStats(group.getValue()).getSkewness();
-            outputBuilder.addWelltypeValue(group.getKey(), skewness);
-        }
-        return outputBuilder.build();
+    public Double calculateForPlate(CalculationInput input) {
+        return calculate(input.getPlateValues());
+    }
+
+    @Override
+    public Double calculateForWelltype(CalculationInput input, String welltype, double[] values) {
+        return calculate(values);
+    }
+
+    private double calculate(double[] values) {
+        return StatUtils.createStats(values).getSkewness();
     }
 }

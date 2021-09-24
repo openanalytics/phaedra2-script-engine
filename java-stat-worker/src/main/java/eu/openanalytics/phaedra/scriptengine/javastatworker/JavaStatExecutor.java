@@ -67,11 +67,19 @@ public class JavaStatExecutor implements IExecutor {
         var statName = formula.replace("JavaStat::", "");
         var calculator = statCalculators.get(statName);
 
-        CalculationOutput output;
+        var outputBuilder = CalculationOutput.builder();
         if (calculator == null) {
             throw new IllegalArgumentException("TODO"); // TODO
         } else {
-            output = calculator.calculate(input);
+            if (input.isPlateStat()) {
+                outputBuilder.plateValue(calculator.calculateForPlate(input));
+            }
+            if (input.isWelltypeStat()) {
+                for (var group : input.getValuesByWelltype().entrySet()) {
+                    var value = calculator.calculateForWelltype(input, group.getKey(), group.getValue());
+                    outputBuilder.addWelltypeValue(group.getKey(), value);
+                }
+            }
         }
 
         var res = ScriptExecutionOutputDTO.builder()
@@ -79,11 +87,9 @@ public class JavaStatExecutor implements IExecutor {
             .statusCode(ResponseStatusCode.SUCCESS)
             .statusMessage("Ok")
             .exitCode(0)
-            .output(objectMapper.writeValueAsString(output));
+            .output(objectMapper.writeValueAsString(outputBuilder.build()));
 
         return res.build();
     }
-
-
 
 }
