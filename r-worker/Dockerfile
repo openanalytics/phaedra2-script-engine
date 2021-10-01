@@ -78,10 +78,10 @@ LABEL maintainer="Tobia De Koninck <tdekoninck@openanalytics.eu>"
 
 ENV PHAEDRA_USER phaedra
 
+RUN R -e "install.packages('rjson')"
+
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
-
-RUN R -e "install.packages('rjson')"
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
