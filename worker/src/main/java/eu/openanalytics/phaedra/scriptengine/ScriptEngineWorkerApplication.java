@@ -129,7 +129,6 @@ public class ScriptEngineWorkerApplication {
             logger.info("Disabling concurrency: only consuming one message a time (ignoring preFetchCount and consumer settings)");
             container.setPrefetchCount(0);
             container.setConsumersPerQueue(1);
-            container.setExclusive(true);
         }
         return container;
     }
