@@ -71,6 +71,7 @@
                     <images>
                         <image>
                             <name>${docker.repoPrefix}${docker.imageName}</name>
+                            <cacheFrom>${docker.repoPrefix}${docker.imageName}</cacheFrom>
                             <build>
                                 <dockerFile>${project.basedir}/Dockerfile</dockerFile>
                                 <tags>
