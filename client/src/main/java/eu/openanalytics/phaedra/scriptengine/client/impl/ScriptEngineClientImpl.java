@@ -44,14 +44,15 @@ public class ScriptEngineClientImpl implements MessageListener, ScriptEngineClie
 
     @Override
     public void execute(ScriptExecution scriptExecution) throws JsonProcessingException {
+        // first save execution (before sending the message, otherwise it may not be saved before the response is received)
+        executionsInProgress.put(scriptExecution.getScriptExecutionInput().getId(), scriptExecution);
+
         // send message
         rabbitTemplate.send(
             "scriptengine_input",
             scriptExecution.getTargetRuntime().getRoutingKey(),
             new Message(objectMapper.writeValueAsBytes(scriptExecution.getScriptExecutionInput()))
         );
-
-        executionsInProgress.put(scriptExecution.getScriptExecutionInput().getId(), scriptExecution);
     }
 
     @Override
@@ -62,13 +63,13 @@ public class ScriptEngineClientImpl implements MessageListener, ScriptEngineClie
             var scriptExecution = executionsInProgress.get(output.getInputId());
             if (scriptExecution != null) {
                 scriptExecution.getOutput().complete(output);
+                executionsInProgress.remove(output.getInputId());
             } else {
                 logger.warn("No execution found, for output id " + output.getInputId());
             }
         } catch (IOException e) {
             logger.warn("Exception during handling of incoming output message", e);
         }
-        // TODO delete future
     }
 
 }
