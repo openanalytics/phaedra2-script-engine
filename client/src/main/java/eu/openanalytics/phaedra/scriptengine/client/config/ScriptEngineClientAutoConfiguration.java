@@ -25,9 +25,6 @@ public class ScriptEngineClientAutoConfiguration {
     private ScriptEngineClientConfiguration clientConfig;
 
     @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @Autowired
     private AmqpAdmin amqpAdmin;
 
     @PostConstruct
