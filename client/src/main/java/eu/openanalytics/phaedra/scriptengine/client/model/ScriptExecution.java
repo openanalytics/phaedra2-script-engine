@@ -23,6 +23,7 @@ public class ScriptExecution {
             .script(script)
             .input(input)
             .responseTopicSuffix(responseTopicSuffix)
+            .queueTimestamp(System.currentTimeMillis())
             .build();
     }
 
