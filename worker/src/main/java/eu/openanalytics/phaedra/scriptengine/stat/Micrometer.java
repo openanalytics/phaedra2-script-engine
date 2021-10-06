@@ -30,6 +30,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -54,7 +56,7 @@ public class Micrometer {
         receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay");
         // we use publishPercentiles(0) to add the minimal value to the metrics
         idleTime = Timer.builder("phaedra2_scriptengine_worker_idle_time").publishPercentiles(0).register(registry);
-
+        
         // register a gauge that computes the minimal idle time
         minIdleTimeHelper = new MinIdleTime(idleTime);
         registry.gauge("phaedra2_scriptengine_worker_idle_time_min", Tags.empty(), minIdleTimeHelper, MinIdleTime::getValue);
@@ -74,11 +76,19 @@ public class Micrometer {
         }
 
         public double getValue() {
-            var pr = idleTime.percentile(0.0, TimeUnit.MILLISECONDS);
-            if (pr < 0.1) {
+            var pr = round(idleTime.percentile(0.0, TimeUnit.SECONDS), 3);
+            if (pr < 0.001) { // if smaller then 1ms
                 return Double.NaN;
             }
             return pr;
+        }
+
+        public static double round(double value, int decimals) {
+            if (Double.isNaN(value) || Double.isInfinite(value)) return value;
+            BigDecimal bd = new BigDecimal(value);
+            bd = bd.setScale(decimals, RoundingMode.HALF_UP);
+            value = bd.doubleValue();
+            return value;
         }
     }
 
