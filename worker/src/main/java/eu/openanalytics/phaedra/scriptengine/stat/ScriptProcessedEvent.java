@@ -22,8 +22,6 @@ package eu.openanalytics.phaedra.scriptengine.stat;
 
 import org.springframework.context.ApplicationEvent;
 
-import java.time.Duration;
-
 /**
  * Event when Script has been fully processed (i.e. executed).
  */

@@ -48,7 +48,8 @@ public class Micrometer {
     public Micrometer(MeterRegistry registry) {
         processedScripts = registry.counter("phaedra2_scriptengine_worker_processed_scripts");
         receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay");
-        idleTime = registry.timer("phaedra2_scriptengine_worker_idle_time");
+        // publishPercentiles(0) just means adding the minimal value to the metrics
+        idleTime = Timer.builder("phaedra2_scriptengine_worker_idle_time").publishPercentiles(0).register(registry);
     }
 
     @Async
