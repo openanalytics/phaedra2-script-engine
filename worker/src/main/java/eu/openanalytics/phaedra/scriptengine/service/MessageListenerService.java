@@ -45,7 +45,7 @@ public class MessageListenerService implements MessageListener {
         try {
             Pair<String, Message> response = messageProcessorService.processMessage(message);
             if (response == null) {
-                return; // TODO
+                return;
             }
             rabbitTemplate.send(response.getFirst(), response.getSecond());
         } catch (InterruptedException e) {

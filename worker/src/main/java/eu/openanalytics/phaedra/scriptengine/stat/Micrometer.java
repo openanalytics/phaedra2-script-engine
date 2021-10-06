@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.phaedra.scriptengine.stat;
 
+import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
@@ -51,15 +52,15 @@ public class Micrometer {
 
     private final MinIdleTime minIdleTimeHelper;
 
-    public Micrometer(MeterRegistry registry) {
-        processedScripts = registry.counter("phaedra2_scriptengine_worker_processed_scripts");
-        receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay");
+    public Micrometer(MeterRegistry registry, EnvConfig envConfig) {
+        processedScripts = registry.counter("phaedra2_scriptengine_worker_processed_scripts", Tags.of("queue", envConfig.getInputQueueName()));
+        receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay", Tags.of("queue", envConfig.getInputQueueName()));
         // we use publishPercentiles(0) to add the minimal value to the metrics
-        idleTime = Timer.builder("phaedra2_scriptengine_worker_idle_time").publishPercentiles(0).register(registry);
-        
+        idleTime = Timer.builder("phaedra2_scriptengine_worker_idle_time").publishPercentiles(0).tag("queue", envConfig.getInputQueueName()).register(registry);
+
         // register a gauge that computes the minimal idle time
         minIdleTimeHelper = new MinIdleTime(idleTime);
-        registry.gauge("phaedra2_scriptengine_worker_idle_time_min", Tags.empty(), minIdleTimeHelper, MinIdleTime::getValue);
+        registry.gauge("phaedra2_scriptengine_worker_idle_time_min", Tags.of("queue", envConfig.getInputQueueName()), minIdleTimeHelper, MinIdleTime::getValue);
     }
 
     /**

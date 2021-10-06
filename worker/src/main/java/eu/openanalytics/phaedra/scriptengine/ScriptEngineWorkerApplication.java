@@ -69,7 +69,7 @@ public class ScriptEngineWorkerApplication {
 
     public ScriptEngineWorkerApplication(AmqpAdmin amqpAdmin, EnvConfig envConfig) {
         this.envConfig = envConfig;
-        inputQueueName = String.format("scriptengine.input.%s.%s.%s", envConfig.getPoolName(), envConfig.getLanguage(), envConfig.getVersion());
+        inputQueueName = envConfig.getInputQueueName();
 
         // input exchange and queues
         String inputExchangeName = "scriptengine_input";

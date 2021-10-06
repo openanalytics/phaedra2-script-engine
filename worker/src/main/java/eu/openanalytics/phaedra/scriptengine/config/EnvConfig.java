@@ -38,6 +38,7 @@ public class EnvConfig {
     private String version;
     private Integer prefetchCount = 250;
     private Integer consumers = 4;
+    private String inputQueueName;
 
     @PostConstruct
     public void init() {
@@ -52,6 +53,7 @@ public class EnvConfig {
         if (version == null) {
             throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.env.version not set");
         }
+        inputQueueName = String.format("scriptengine.input.%s.%s.%s", poolName, language, version);
     }
 
     /**
@@ -115,6 +117,10 @@ public class EnvConfig {
 
     public void setConsumers(Integer consumers) {
         this.consumers = consumers;
+    }
+
+    public String getInputQueueName() {
+        return inputQueueName;
     }
 }
 
