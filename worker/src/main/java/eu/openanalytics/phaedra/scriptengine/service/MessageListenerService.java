@@ -26,8 +26,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * Service that listens for messages on the queue and passes them to the {@link MessageProcessorService}.
  * Messages are handled in a synchronous, blocking way in order to ensure that only one message is being processed by this service at a time.
@@ -42,11 +40,8 @@ public class MessageListenerService implements MessageListener {
         this.messageProcessorService = messageProcessorService;
     }
 
-    private final ConcurrentHashMap<String, Boolean> activeThreads = new ConcurrentHashMap<>();
-
     @Override
     public void onMessage(Message message) {
-        activeThreads.put(Thread.currentThread().getName(), true);
         try {
             Pair<String, Message> response = messageProcessorService.processMessage(message);
             if (response == null) {
@@ -55,12 +50,7 @@ public class MessageListenerService implements MessageListener {
             rabbitTemplate.send(response.getFirst(), response.getSecond());
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } finally {
-            activeThreads.put(Thread.currentThread().getName(), false);
         }
     }
 
-    public long getActiveWorkers() {
-        return activeThreads.reduceValuesToInt(Long.MAX_VALUE, (el) -> el ? 1 : 0, 0, Integer::sum);
-    }
 }

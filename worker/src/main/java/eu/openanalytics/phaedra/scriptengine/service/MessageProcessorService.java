@@ -26,6 +26,7 @@ import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
 import eu.openanalytics.phaedra.scriptengine.stat.ScriptProcessedEvent;
+import eu.openanalytics.phaedra.scriptengine.stat.ScriptReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -69,9 +70,8 @@ public class MessageProcessorService {
         // received a message -> process it
         ScriptExecutionInputDTO input = parseMessage(message);
         if (input == null) return null;
-        logger.debug("Received a valid input message.");
-
         Duration timeInQueue = Duration.between(Instant.ofEpochMilli(input.getQueueTimestamp()), Instant.now());
+        applicationEventPublisher.publishEvent(new ScriptReceivedEvent(this, input.getId(), timeInQueue));
 
         try {
             var scriptExecutionOutput = executor.execute(input);
@@ -80,7 +80,7 @@ public class MessageProcessorService {
             var response = constructResponse(scriptExecutionOutput);
             if (response == null) return null;
 
-            applicationEventPublisher.publishEvent(new ScriptProcessedEvent(this, input.getId(), timeInQueue));
+            applicationEventPublisher.publishEvent(new ScriptProcessedEvent(this, input.getId()));
 
             return Pair.of(constructResponseRoutingKey(input), response);
         } catch (Exception e) {
