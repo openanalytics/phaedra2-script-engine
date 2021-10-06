@@ -22,6 +22,7 @@ package eu.openanalytics.phaedra.scriptengine.stat;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +31,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -45,11 +47,39 @@ public class Micrometer {
     private final Timer idleTime;
     private final AtomicLong lastMessage = new AtomicLong(System.currentTimeMillis());
 
+    private final MinIdleTime minIdleTimeHelper;
+
     public Micrometer(MeterRegistry registry) {
         processedScripts = registry.counter("phaedra2_scriptengine_worker_processed_scripts");
         receiveDelay = registry.timer("phaedra2_scriptengine_worker_receive_delay");
-        // publishPercentiles(0) just means adding the minimal value to the metrics
+        // we use publishPercentiles(0) to add the minimal value to the metrics
         idleTime = Timer.builder("phaedra2_scriptengine_worker_idle_time").publishPercentiles(0).register(registry);
+
+        // register a gauge that computes the minimal idle time
+        minIdleTimeHelper = new MinIdleTime(idleTime);
+        registry.gauge("phaedra2_scriptengine_worker_idle_time_min", Tags.empty(), minIdleTimeHelper, MinIdleTime::getValue);
+    }
+
+    /**
+     * A helper class to compute the minimum idle time. When the worker receives no input messages,
+     * the minimum value will always be 0. However, this is misleading as it seems that the worker is working very hard in that case,
+     * when in fact it's receiving no messages. Therefore, when recording the idle time, the minimum is always 1ms ({@link Micrometer#onScriptReceivedEvent}.
+     * We then never output 0ms as the minimum value, but instead output {@link Double.NaN} to indicate that no input messages were received.
+     */
+    private static class MinIdleTime {
+        private final Timer idleTime;
+
+        private MinIdleTime(Timer idleTime) {
+            this.idleTime = idleTime;
+        }
+
+        public double getValue() {
+            var pr = idleTime.percentile(0.0, TimeUnit.MILLISECONDS);
+            if (pr < 0.1) {
+                return Double.NaN;
+            }
+            return pr;
+        }
     }
 
     @Async
@@ -64,7 +94,7 @@ public class Micrometer {
     @EventListener
     public void onScriptReceivedEvent(ScriptReceivedEvent event) {
         long lastMessageFinished = lastMessage.get();
-        long timeBetweenMessage = System.currentTimeMillis() - lastMessageFinished;
+        long timeBetweenMessage = Math.max(1, System.currentTimeMillis() - lastMessageFinished);
 
         logger.info("Script received {}, timeInQueue: {}ms, timeAfterLastInput: {}ms", event.getScriptExecutionId(), event.getTimeInQueue().toMillis(), timeBetweenMessage);
         receiveDelay.record(event.getTimeInQueue());
