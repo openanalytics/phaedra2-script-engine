@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: tdekoninck
+      changes:
+        - createTable:
+            tableName: script_execution
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: feature_stat_pkey
+                  name: id
+                  type: text
+              - column:
+                  constraints:
+                    nullable: true
+                  name: routing_key
+                  type: text
+              - column:
+                  constraints:
+                    nullable: true
+                  name: queue_timestamp
+                  type: timestamp
+              - column:
+                  constraints:
+                    nullable: true
+                  name: last_heartbeat
+                  type: timestamp
+              - column:
+                  constraints:
+                    nullable: true
+                  name: response_status_code
+                  type: TEXT
