@@ -74,7 +74,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         } catch (WorkerException e) {
             e.printStackTrace();
             return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(),
-                "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", -1);
+                "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", 0);
         } finally {
             if (config.getCleanWorkspace()) {
                 cleanWorkspace(scriptExecution);

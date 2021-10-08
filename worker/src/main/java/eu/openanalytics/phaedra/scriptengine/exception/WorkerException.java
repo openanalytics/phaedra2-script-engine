@@ -27,4 +27,8 @@ public class WorkerException extends Exception {
     public WorkerException(String msg, Throwable cause) {
         super(msg, cause);
     }
+
+    public WorkerException(String msg) {
+        super(msg);
+    }
 }

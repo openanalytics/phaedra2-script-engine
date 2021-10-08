@@ -26,6 +26,7 @@ import eu.openanalytics.phaedra.scriptengine.executor.IExecutorRegistration;
 import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.DirectExchange;
@@ -66,6 +67,7 @@ public class ScriptEngineWorkerApplication {
 
     private final String inputQueueName;
     private final String outputExchangeName = "scriptengine_output";
+    public final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
 
     public ScriptEngineWorkerApplication(AmqpAdmin amqpAdmin, EnvConfig envConfig) {
         this.envConfig = envConfig;
@@ -79,6 +81,9 @@ public class ScriptEngineWorkerApplication {
 
         // output exchange (-> no queues)
         amqpAdmin.declareExchange(new TopicExchange(outputExchangeName, true, false));
+
+        // heartbeat exchange
+        amqpAdmin.declareExchange(new DirectExchange(HEARTBEAT_EXCHANGE, true, false));
 
         logger.info("Using {} as name for the input exchange", inputExchangeName);
         logger.info("Using {} as name for the input queue", inputQueueName);
@@ -120,6 +125,7 @@ public class ScriptEngineWorkerApplication {
         container.setConnectionFactory(connectionFactory);
         container.addQueueNames(inputQueueName);
         container.setMessageListener(messagePollerService);
+        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
 
         if (executorRegistration.allowConcurrency()) {
             logger.info(String.format("Enabling concurrency: [preFetchCount: %s, consumers: %s]", envConfig.getPrefetchCount(), envConfig.getConsumers() ));

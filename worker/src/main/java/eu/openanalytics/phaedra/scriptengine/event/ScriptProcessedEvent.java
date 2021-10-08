@@ -18,31 +18,23 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.phaedra.scriptengine.stat;
+package eu.openanalytics.phaedra.scriptengine.event;
 
 import org.springframework.context.ApplicationEvent;
-
-import java.time.Duration;
 
 /**
  * Event when Script has been fully processed (i.e. executed).
  */
-public class ScriptReceivedEvent extends ApplicationEvent {
+public class ScriptProcessedEvent extends ApplicationEvent {
 
     private final String scriptExecutionId;
-    private final Duration timeInQueue;
 
-    public ScriptReceivedEvent(Object source, String scriptExecutionId, Duration timeInQueue) {
+    public ScriptProcessedEvent(Object source, String scriptExecutionId) {
         super(source);
         this.scriptExecutionId = scriptExecutionId;
-        this.timeInQueue = timeInQueue;
     }
 
     public String getScriptExecutionId() {
         return scriptExecutionId;
-    }
-
-    public Duration getTimeInQueue() {
-        return timeInQueue;
     }
 }

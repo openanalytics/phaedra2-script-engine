@@ -21,6 +21,8 @@
 package eu.openanalytics.phaedra.scriptengine.stat;
 
 import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
+import eu.openanalytics.phaedra.scriptengine.event.ScriptProcessedEvent;
+import eu.openanalytics.phaedra.scriptengine.event.ScriptReceivedEvent;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
