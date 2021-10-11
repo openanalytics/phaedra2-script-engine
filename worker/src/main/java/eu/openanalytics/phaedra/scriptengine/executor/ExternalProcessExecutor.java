@@ -55,7 +55,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         return execute(new ScriptExecution(scriptExecutionInput));
     }
 
-    public ScriptExecutionOutputDTO execute( ScriptExecution scriptExecution) throws InterruptedException {
+    public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
         try {
             setupEnv(scriptExecution);
 

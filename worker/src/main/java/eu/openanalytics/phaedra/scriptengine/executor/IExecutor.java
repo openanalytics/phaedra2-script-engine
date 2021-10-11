@@ -25,7 +25,7 @@ import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 
 /**
- * Interface for a service which can execute a {@link ScriptExecution}, producing a {@link ScriptExecutionOutputDTO}.
+ * Interface for a service which can execute a {@link ScriptExecutionInputDTO}, producing a {@link ScriptExecutionOutputDTO}.
  */
 public interface IExecutor {
 
