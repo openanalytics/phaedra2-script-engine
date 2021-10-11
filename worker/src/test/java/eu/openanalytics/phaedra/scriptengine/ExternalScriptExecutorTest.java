@@ -143,7 +143,7 @@ public class ExternalScriptExecutorTest {
         Assertions.assertEquals("", output.getOutput());
         Assertions.assertEquals("An error occurred in the worker while processing the script.", output.getStatusMessage());
         Assertions.assertEquals(ResponseStatusCode.WORKER_INTERNAL_ERROR, output.getStatusCode());
-        Assertions.assertEquals(-1, output.getExitCode()); // TODO is this a good status code?
+        Assertions.assertEquals(0, output.getExitCode());
     }
 
     @Test
