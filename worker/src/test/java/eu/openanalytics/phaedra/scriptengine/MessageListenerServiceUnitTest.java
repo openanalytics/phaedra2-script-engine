@@ -62,7 +62,7 @@ public class MessageListenerServiceUnitTest {
         processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)), channel);
 
         verify(channel).basicAck(0, false);
-        verify(heartbeatSenderService).sendExecutionStarted(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
+        verify(heartbeatSenderService).sendAndStartHeartbeats(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
         verify(rabbiTemplate).send("scriptengine.output.myTopic", new Message("{\"inputId\":\"myId\",\"output\":\"myOutput\",\"statusCode\":\"SUCCESS\",\"statusMessage\":\"Ok\",\"exitCode\":0}".getBytes(StandardCharsets.UTF_8)));
     }
 
@@ -132,7 +132,7 @@ public class MessageListenerServiceUnitTest {
         processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)), channel);
 
         verify(channel).basicAck(0, false);
-        verify(heartbeatSenderService).sendExecutionStarted(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
+        verify(heartbeatSenderService).sendAndStartHeartbeats(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
 
         // the message should not be further processed
         verifyNoMoreInteractions(rabbiTemplate, channel, heartbeatSenderService);
@@ -171,7 +171,7 @@ public class MessageListenerServiceUnitTest {
 
         processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\", \"queueTimestamp\": 1024}".getBytes(StandardCharsets.UTF_8)), channel);
         verify(channel).basicAck(0, false);
-        verify(heartbeatSenderService).sendExecutionStarted(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
+        verify(heartbeatSenderService).sendAndStartHeartbeats(new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L));
         verifyNoMoreInteractions(rabbiTemplate, channel, heartbeatSenderService);
     }
 

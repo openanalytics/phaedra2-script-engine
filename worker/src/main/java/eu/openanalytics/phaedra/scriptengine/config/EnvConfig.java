@@ -39,6 +39,7 @@ public class EnvConfig {
     private Integer prefetchCount = 250;
     private Integer consumers = 4;
     private String inputQueueName;
+    private Integer heartbeatInterval;
 
     @PostConstruct
     public void init() {
@@ -53,6 +54,15 @@ public class EnvConfig {
         if (version == null) {
             throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.env.version not set");
         }
+
+        if (heartbeatInterval == null) {
+            throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.env.heartbeatInterval not set");
+        }
+
+        if (heartbeatInterval < 1) {
+            throw new IllegalArgumentException("Incorrect configuration detected: phaedra2.script-engine-worker.env.heartbeatInterval must be greater than 1");
+        }
+
         inputQueueName = String.format("scriptengine.input.%s.%s.%s", poolName, language, version);
     }
 
@@ -122,6 +132,15 @@ public class EnvConfig {
     public String getInputQueueName() {
         return inputQueueName;
     }
+
+    public void setHeartbeatInterval(Integer heartbeatInterval) {
+        this.heartbeatInterval = heartbeatInterval;
+    }
+
+    public Integer getHeartbeatInterval() {
+        return heartbeatInterval;
+    }
+
 }
 
 

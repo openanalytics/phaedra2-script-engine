@@ -126,6 +126,7 @@ public class ScriptEngineWorkerApplication {
         container.addQueueNames(inputQueueName);
         container.setMessageListener(messagePollerService);
         container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
+        container.setShutdownTimeout(0);
 
         if (executorRegistration.allowConcurrency()) {
             logger.info(String.format("Enabling concurrency: [preFetchCount: %s, consumers: %s]", envConfig.getPrefetchCount(), envConfig.getConsumers() ));

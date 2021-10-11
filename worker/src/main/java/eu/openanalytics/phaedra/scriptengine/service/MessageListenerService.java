@@ -61,6 +61,10 @@ public class MessageListenerService implements ChannelAwareMessageListener {
 
     @Override
     public void onMessage(Message message, Channel channel) throws IOException {
+        if (ShutdownService.isShuttingDown()) {
+            logger.warn("Ignoring message (not acking it) because we are shutting down!");
+            return;
+        }
         ScriptExecutionInputDTO input = parseMessage(message);
         if (input == null) {
             // 1. still ack the message, otherwise it will eventually be re-queued
@@ -69,7 +73,7 @@ public class MessageListenerService implements ChannelAwareMessageListener {
         }
 
         // 1. send a notification that we are going to process this input
-        heartbeatSenderService.sendExecutionStarted(input);
+        heartbeatSenderService.sendAndStartHeartbeats(input);
         // 2. now ack the message
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
 
@@ -78,15 +82,23 @@ public class MessageListenerService implements ChannelAwareMessageListener {
 
         try {
             var scriptExecutionOutput = executor.execute(input);
-            if (scriptExecutionOutput == null) return;
+            if (scriptExecutionOutput == null) {
+                heartbeatSenderService.stopHeartbeats(input);
+                return;
+            }
 
             var response = constructResponse(scriptExecutionOutput);
-            if (response == null) return;
+            if (response == null) {
+                heartbeatSenderService.stopHeartbeats(input);
+                return;
+            }
 
             rabbitTemplate.send(constructResponseRoutingKey(input), response);
             applicationEventPublisher.publishEvent(new ScriptProcessedEvent(this, input.getId()));
         } catch (Exception e) {
             logger.warn("Exception while processing message" + message, e);
+        } finally {
+            heartbeatSenderService.stopHeartbeats(input);
         }
     }
 

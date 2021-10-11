@@ -26,6 +26,7 @@ import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
+import eu.openanalytics.phaedra.scriptengine.service.ShutdownService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
@@ -60,6 +61,11 @@ public abstract class ExternalProcessExecutor implements IExecutor {
             setupEnv(scriptExecution);
 
             int exitCode = executeScript(scriptExecution);
+
+            if (ShutdownService.isShuttingDown()) {
+                logger.warn("Script marked as WORKER_INTERNAL_ERROR since worker is shutting down!");
+                return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "Worker shutting down!", exitCode);
+            }
 
             if (!checkOutput(scriptExecution)) {
                 return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(),
