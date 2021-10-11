@@ -5,7 +5,23 @@ package eu.openanalytics.phaedra.scriptengine.dto;
  */
 public enum ResponseStatusCode {
     SUCCESS,
-    WORKER_INTERNAL_ERROR,
     SCRIPT_ERROR,
-    BAD_REQUEST
+    BAD_REQUEST,
+    WORKER_INTERNAL_ERROR {
+        @Override
+        public boolean canBeRetried() {
+            return true;
+        }
+    },
+    INTERRUPTED_BY_WATCHDOG {
+        @Override
+        public boolean canBeRetried() {
+            return true;
+        }
+    };
+
+    public boolean canBeRetried() {
+        return false;
+    }
+
 }

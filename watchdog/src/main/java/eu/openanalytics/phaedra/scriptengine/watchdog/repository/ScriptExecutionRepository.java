@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Component
 public class ScriptExecutionRepository {
@@ -59,8 +61,15 @@ public class ScriptExecutionRepository {
         }
     }
 
+    public void interruptScriptExecution(String id) {
+        if (!stopScriptExecution(id, ResponseStatusCode.INTERRUPTED_BY_WATCHDOG)) {
+            stopScriptExecution(id, ResponseStatusCode.INTERRUPTED_BY_WATCHDOG);
+        }
+    }
+
     /**
      * Find a ScriptExecution by id.
+     *
      * @param id the id of the ScriptExceution
      * @return the ScriptExecution or null
      */
@@ -68,6 +77,14 @@ public class ScriptExecutionRepository {
         return jdbcTemplate.queryForObject("SELECT * FROM script_execution WHERE id = ? FOR UPDATE", new RowMapper(), id);
     }
 
+    public List<ScriptExecution> findToInterrupt(String routingKey, LocalDateTime notBefore) {
+        var date = Timestamp.valueOf(notBefore);
+        return jdbcTemplate.query(
+            "SELECT * FROM script_execution WHERE routing_key = ? " +
+                "AND last_heartbeat < ?" +
+                "AND last_heartbeat IS NOT NULL " +
+                "AND response_status_code IS NULL", new RowMapper(), routingKey, notBefore);
+    }
 
     /**
      * Checks whether a ScriptExecution for the given id exists.
@@ -138,10 +155,10 @@ public class ScriptExecutionRepository {
 
     /**
      * Creates or update a script execution with:
-     *  - id
-     *  - response_status_code
+     * - id
+     * - response_status_code
      *
-     * @param id id of the ScriptExecution
+     * @param id         id of the ScriptExecution
      * @param statusCode the statusCode
      * @return whether the record was successfully created/updated. May be false when the record was created while calling this function.
      */
@@ -166,14 +183,17 @@ public class ScriptExecutionRepository {
 
         @Override
         public ScriptExecution mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return ScriptExecution.builder()
+            var res = ScriptExecution.builder()
                 .id(rs.getString("ID"))
                 .lastHeartbeat(rs.getObject("last_heartbeat", LocalDateTime.class))
                 .queueTimestamp(rs.getObject("queue_timestamp", LocalDateTime.class))
-                .routingKey(rs.getString("routing_key"))
-                .responseStatusCode(ResponseStatusCode.valueOf(rs.getString("response_status_code")))
-                .build();
+                .routingKey(rs.getString("routing_key"));
 
+            if (rs.getString("response_status_code") != null) {
+                res.responseStatusCode(ResponseStatusCode.valueOf(rs.getString("response_status_code")));
+            }
+
+            return res.build();
         }
     }
 

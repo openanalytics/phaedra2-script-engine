@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.scriptengine.watchdog;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
 import eu.openanalytics.phaedra.scriptengine.watchdog.service.MessageListenerService;
 import eu.openanalytics.phaedra.util.jdbc.JDBCUtils;
@@ -15,7 +17,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 import java.util.Map;
@@ -30,11 +31,11 @@ public class WatchdogApplication {
     }
 
 
-    private final static String INPUT_EXCHANGE = "scriptengine_input";
+    public final static String INPUT_EXCHANGE = "scriptengine_input";
     public final static String INPUT_QUEUE_NAME = "watchdog_input";
-    private final static String OUTPUT_EXCHANGE = "scriptengine_output";
+    public final static String OUTPUT_EXCHANGE = "scriptengine_output";
     public final static String OUTPUT_QUEUE_NAME = "watchdog_output";
-    private final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
+    public final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
     public final static String HEARTBEAT_QUEUE_NAME = "watchdog_heartbeat";
 
     public WatchdogApplication(AmqpAdmin amqpAdmin, WatchDogConfig watchDogConfig, Environment environment) {
@@ -58,8 +59,8 @@ public class WatchdogApplication {
         // TODO fix this
         amqpAdmin.declareExchange(new DirectExchange(INPUT_EXCHANGE, true, false));
         amqpAdmin.declareQueue(new Queue(INPUT_QUEUE_NAME, true, false, false));
-        for (var workerQueue : watchDogConfig.getInputQueues()) {
-            amqpAdmin.declareBinding(new Binding(INPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, INPUT_EXCHANGE, workerQueue.getRoutingKey(), Map.of()));
+        for (var target : watchDogConfig.getTargets()) {
+            amqpAdmin.declareBinding(new Binding(INPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, INPUT_EXCHANGE, target.getRoutingKey(), Map.of()));
         }
         // output exchange (-> no queues)
         amqpAdmin.declareExchange(new TopicExchange(OUTPUT_EXCHANGE, true, false));
@@ -84,32 +85,29 @@ public class WatchdogApplication {
 
     @Bean
     public DataSource dataSource() {
-//        String url = "jdbc:postgresql://localhost:5432/phaedra2";
-//        String username = "phaedra2";
-//        String password = "phaedra2";
-//        String schema = "watchdog";
-        String url = environment.getProperty("DB_URL");
+        String hostAndPort = environment.getProperty("DB_HOST_PORT");
+        String dbName = environment.getProperty("DB_NAME");
+        String schema = environment.getProperty("DB_SCHEMA", "public");
+        if (StringUtils.isEmpty(hostAndPort) || StringUtils.isEmpty(dbName)) {
+            throw new RuntimeException("No database host, port or name configured");
+        }
+        String url = String.format("jdbc:postgresql://%s/%s?currentSchema=%s", hostAndPort, dbName, schema);
         String username = environment.getProperty("DB_USER");
         String password = environment.getProperty("DB_PASSWORD");
-        String schema = environment.getProperty("DB_SCHEMA");
 
-        if (StringUtils.isEmpty(url)) {
-            throw new RuntimeException("No database URL configured: " + url);
-        }
         String driverClassName = JDBCUtils.getDriverClassName(url);
         if (driverClassName == null) {
             throw new RuntimeException("Unsupported database type: " + url);
         }
 
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(driverClassName);
-        dataSource.setUrl(url);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
-        if (!StringUtils.isEmpty(schema)) {
-            dataSource.setSchema(schema);
-        }
-        return dataSource;
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setDriverClassName(driverClassName);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setAutoCommit(true);
+
+        return new HikariDataSource(config);
     }
 
 }

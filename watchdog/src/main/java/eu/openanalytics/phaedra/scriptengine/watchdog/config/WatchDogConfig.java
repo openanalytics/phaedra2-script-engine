@@ -1,45 +1,57 @@
 package eu.openanalytics.phaedra.scriptengine.watchdog.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@ConfigurationProperties(prefix = "phaedra2.script-engine-watchdog")
 public class WatchDogConfig {
 
-    public List<WorkerQueue> getInputQueues() {
-        return List.of(
-            new WorkerQueue("scriptengine.input.fast-lane.JavaStat.v1", 5000, 5000),
-            new WorkerQueue("scriptengine.input.fast-lane.R.v1", 5000, 5000));
-    }
+    private List<Target> targets;
 
     public String getOutputRoutingKey() {
         return "scriptengine.output.CalculationService";
     }
 
+    public List<Target> getTargets() {
+        return targets;
+    }
 
-    public static class WorkerQueue {
+    public void setTargets(List<Target> targets) {
+        this.targets = targets;
+    }
+
+    public static class Target {
 
         private String routingKey;
-        private int initialDelay;
-        private int heartBeatInterval;
+        private int heartbeatInterval;
+        private int maxMissedHeartbeats;
 
-        private WorkerQueue(String routingKey, int initialDelay, int heartBeatInterval) {
-            this.routingKey = routingKey;
-            this.initialDelay = initialDelay;
-            this.heartBeatInterval = heartBeatInterval;
-        }
-
-        public int getHeartBeatInterval() {
-            return heartBeatInterval;
-        }
-
-        public int getInitialDelay() {
-            return initialDelay;
-        }
 
         public String getRoutingKey() {
             return routingKey;
+        }
+
+        public int getHeartbeatInterval() {
+            return heartbeatInterval;
+        }
+
+        public int getMaxMissedHeartbeats() {
+            return maxMissedHeartbeats;
+        }
+
+        public void setMaxMissedHeartbeats(int maxMissedHeartbeats) {
+            this.maxMissedHeartbeats = maxMissedHeartbeats;
+        }
+
+        public void setHeartbeatInterval(int heartbeatInterval) {
+            this.heartbeatInterval = heartbeatInterval;
+        }
+
+        public void setRoutingKey(String routingKey) {
+            this.routingKey = routingKey;
         }
     }
 
