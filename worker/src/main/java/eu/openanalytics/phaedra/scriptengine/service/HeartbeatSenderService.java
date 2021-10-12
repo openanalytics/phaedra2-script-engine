@@ -56,7 +56,7 @@ public class HeartbeatSenderService {
     }
 
     private void sendHeartbeat(String id) throws JsonProcessingException {
-        var msg = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId(id).workerName("main").build()));
+        var msg = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId(id).build()));
         rabbitTemplate.send(HEARTBEAT_EXCHANGE, "heartbeat", msg);
         logger.info("Send heartbeat for {}", id);
     }

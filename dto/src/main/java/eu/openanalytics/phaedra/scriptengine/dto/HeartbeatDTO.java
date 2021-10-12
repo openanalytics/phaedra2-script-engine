@@ -16,6 +16,4 @@ public class HeartbeatDTO {
     @NonNull
     String scriptExecutionId;
 
-    String workerName;
-
 }

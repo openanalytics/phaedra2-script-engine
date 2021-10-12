@@ -49,7 +49,6 @@ class WatchdogApplicationTests {
 
         var input2 = HeartbeatDTO.builder()
             .scriptExecutionId(id)
-            .workerName("my_worker")
             .build();
 
         var input3 = ScriptExecutionOutputDTO.builder()
