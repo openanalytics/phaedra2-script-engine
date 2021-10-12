@@ -24,7 +24,7 @@ import java.util.concurrent.CyclicBarrier;
 @Testcontainers
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {WatchdogApplication.class})
-class ScriptExecutionRepositoryTests {
+class ScriptExecutionRepositoryTest {
 
     @Autowired
     ScriptExecutionRepository repository;
