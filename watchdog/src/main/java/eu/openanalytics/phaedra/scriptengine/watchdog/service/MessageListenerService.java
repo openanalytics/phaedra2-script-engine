@@ -58,7 +58,7 @@ public class MessageListenerService implements MessageListener {
 
     public void onInput(ScriptExecutionInputDTO input, String routingKey) {
         logger.debug("Input:      {}", input.getId());
-        scriptExecutionRepository.createWatch(input, routingKey);
+        scriptExecutionRepository.createScriptExecution(input, routingKey);
     }
 
     public void onOutput(ScriptExecutionOutputDTO output) {

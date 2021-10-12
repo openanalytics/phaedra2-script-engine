@@ -3,13 +3,14 @@ package eu.openanalytics.phaedra.scriptengine.watchdog.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 @ConfigurationProperties(prefix = "phaedra2.script-engine-watchdog")
 public class WatchDogConfig {
 
-    private List<Target> targets;
+    private List<Target> targets = new ArrayList<>();
 
     /**
      * @return the prefix of the topic used in output messages on the output exchange.

@@ -16,6 +16,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -23,20 +24,21 @@ import java.util.concurrent.CyclicBarrier;
 @Testcontainers
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {WatchdogApplication.class})
-class WatchdogApplicationTests {
+class ScriptExecutionRepositoryTests {
 
     @Autowired
-    ScriptExecutionRepository watchService;
+    ScriptExecutionRepository repository;
 
     @DynamicPropertySource
     static void registerPgProperties(DynamicPropertyRegistry registry) {
-        registry.add("DB_URL", Containers.postgreSQLContainer::getJdbcUrl);
+        registry.add("DB_HOST_PORT", () -> String.format("%s:%s", Containers.postgreSQLContainer.getHost(), Containers.postgreSQLContainer.getMappedPort(5432)));
+        registry.add("DB_NAME", Containers.postgreSQLContainer::getDatabaseName);
         registry.add("DB_USER", Containers.postgreSQLContainer::getUsername);
         registry.add("DB_PASSWORD", Containers.postgreSQLContainer::getPassword);
     }
 
     @Test
-    void contextLoads() throws InterruptedException, BrokenBarrierException {
+    void complexTest() throws InterruptedException, BrokenBarrierException {
         var id = UUID.randomUUID().toString();
 
         var input1 = ScriptExecutionInputDTO.builder()
@@ -68,8 +70,8 @@ class WatchdogApplicationTests {
                 } catch (InterruptedException | BrokenBarrierException e) {
                     e.printStackTrace();
                 }
-                watchService.createWatch(input1, "scriptengine.input.fast-lane.JavaStat.v1");
-                watchService.updateScriptExecution(input2);
+                repository.createScriptExecution(input1, "scriptengine.input.fast-lane.JavaStat.v1");
+                repository.updateScriptExecution(input2);
             }
         });
 
@@ -79,7 +81,7 @@ class WatchdogApplicationTests {
             } catch (InterruptedException | BrokenBarrierException e) {
                 e.printStackTrace();
             }
-            watchService.updateScriptExecution(input2);
+            repository.updateScriptExecution(input2);
         });
 
         var thread3 = new Thread(() -> {
@@ -88,8 +90,8 @@ class WatchdogApplicationTests {
             } catch (InterruptedException | BrokenBarrierException e) {
                 e.printStackTrace();
             }
-            watchService.stopScriptExecution(input3);
-            watchService.updateScriptExecution(input2);
+            repository.stopScriptExecution(input3);
+            repository.updateScriptExecution(input2);
         });
 
         thread1.start();
@@ -101,12 +103,59 @@ class WatchdogApplicationTests {
         thread1.join();
         thread2.join();
 
-        var res = watchService.findById(id);
+        var res = repository.findById(id);
         Assertions.assertEquals(id, res.getId());
         Assertions.assertEquals("scriptengine.input.fast-lane.JavaStat.v1", res.getInputRoutingKey());
+        Assertions.assertEquals("scriptengine.output.my_topic", res.getOutputRoutingKey());
         Assertions.assertEquals(ResponseStatusCode.SUCCESS, res.getResponseStatusCode());
         Assertions.assertNotNull(res.getLastHeartbeat());
         Assertions.assertNotNull(res.getQueueTimestamp());
+    }
+
+    @Test
+    public void findToInterrupt() {
+        var id = UUID.randomUUID().toString();
+        var input1 = ScriptExecutionInputDTO.builder()
+            .id(id)
+            .input("my_input")
+            .queueTimestamp(System.currentTimeMillis())
+            .script("my_script")
+            .responseTopicSuffix("my_topic")
+            .build();
+
+        repository.createScriptExecution(input1, "scriptengine.input.fast-lane.JavaStat.v1");
+        var input2 = HeartbeatDTO.builder()
+            .scriptExecutionId(id)
+            .build();
+        repository.updateScriptExecution(input2);
+
+        var res2 = repository.findToInterrupt("scriptengine.input.fast-lane.JavaStat.v1", LocalDateTime.now().plusSeconds(10));
+        Assertions.assertEquals(1, res2.size());
+        Assertions.assertEquals(id, res2.get(0).getId());
+
+        var res3 = repository.findToInterrupt("scriptengine.input.fast-lane.JavaStat.v1", LocalDateTime.now().minusSeconds(10));
+        Assertions.assertEquals(0, res3.size());
+
+        var res4 = repository.findToInterrupt("some_other_topic", LocalDateTime.now());
+        Assertions.assertEquals(0, res4.size());
+
+        // stop scriptExecution
+        var input5= ScriptExecutionOutputDTO.builder()
+            .inputId(id)
+            .statusCode(ResponseStatusCode.SUCCESS)
+            .output("some_output")
+            .statusMessage("Ok")
+            .exitCode(0)
+            .build();
+
+        repository.stopScriptExecution(input5);
+
+        var res6 = repository.findToInterrupt("scriptengine.input.fast-lane.JavaStat.v1", LocalDateTime.now().plusSeconds(10));
+        Assertions.assertEquals(0, res6.size());
+
+        var res7 = repository.findToInterrupt("scriptengine.input.fast-lane.JavaStat.v1", LocalDateTime.now().minusSeconds(10));
+        Assertions.assertEquals(0, res7.size());
+
     }
 
 }

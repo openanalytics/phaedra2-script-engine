@@ -6,8 +6,6 @@ import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
 import eu.openanalytics.phaedra.scriptengine.watchdog.model.ScriptExecution;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -15,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -26,7 +23,6 @@ public class ScriptExecutionRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final WatchDogConfig watchDogConfig;
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public ScriptExecutionRepository(JdbcTemplate jdbcTemplate, WatchDogConfig watchDogConfig) {
         this.jdbcTemplate = jdbcTemplate;
@@ -36,10 +32,10 @@ public class ScriptExecutionRepository {
     /**
      * Creates a scriptExecution.
      */
-    public void createWatch(ScriptExecutionInputDTO input, String routingKey) {
+    public void createScriptExecution(ScriptExecutionInputDTO input, String routingKey) {
         var outputRoutingKey = watchDogConfig.getOutputRoutingKeyPrefix() + input.getResponseTopicSuffix();
-        if (!_createWatch(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey)) {
-            _createWatch(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey);
+        if (!createSCriptExceution(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey)) {
+            createSCriptExceution(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey);
         }
     }
 
@@ -49,8 +45,8 @@ public class ScriptExecutionRepository {
      * @param heartbeatDTO
      */
     public void updateScriptExecution(HeartbeatDTO heartbeatDTO) {
-        if (!_updateWatch(heartbeatDTO.getScriptExecutionId())) {
-            _updateWatch(heartbeatDTO.getScriptExecutionId());
+        if (!updateScriptExecution(heartbeatDTO.getScriptExecutionId())) {
+            updateScriptExecution(heartbeatDTO.getScriptExecutionId());
         }
     }
 
@@ -76,7 +72,6 @@ public class ScriptExecutionRepository {
     }
 
     public List<ScriptExecution> findToInterrupt(String inputRoutingKey, LocalDateTime notBefore) {
-        var date = Timestamp.valueOf(notBefore);
         return jdbcTemplate.query(
             "SELECT * FROM script_execution WHERE input_routing_key = ? " +
                 "AND last_heartbeat < ?" +
@@ -105,7 +100,7 @@ public class ScriptExecutionRepository {
      * @return whether the record was successfully created/updated. May be false when the record was created while calling this function.
      */
     @Transactional
-    protected boolean _createWatch(String id, long queuetimestmap, String inputRoutingKey, String outputRoutingKey) {
+    protected boolean createSCriptExceution(String id, long queuetimestmap, String inputRoutingKey, String outputRoutingKey) {
         var queuedTimestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(queuetimestmap), ZoneId.systemDefault());
 
         if (!existsWithLock(id)) {
@@ -133,7 +128,7 @@ public class ScriptExecutionRepository {
      * @return whether the record was successfully created/updated. May be false when the record was created while calling this function.
      */
     @Transactional
-    protected boolean _updateWatch(String id) {
+    protected boolean updateScriptExecution(String id) {
         var lastHeartbeat = LocalDateTime.now();
 
         if (!existsWithLock(id)) {
