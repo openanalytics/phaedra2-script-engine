@@ -65,11 +65,11 @@ public class HeartbeatCheckerService {
 
         private void interruptScriptExecution(ScriptExecution scriptExecution, LocalDateTime now) {
             var secondsSinceLastHeartbeat = Duration.between(scriptExecution.getLastHeartbeat(), now).toMillis();
-            var statusMessage = String.format("Interrupted by WatchDog because heartbeat was %sms ago (expects to receive heartbeat every %s seconds)", secondsSinceLastHeartbeat, target.getHeartbeatInterval());
+            var statusMessage = String.format("Rescheduled by WatchDog because heartbeat was %sms ago (expects to receive heartbeat every %s seconds)", secondsSinceLastHeartbeat, target.getHeartbeatInterval());
             logger.warn("ScriptExecution with id {} {} ", scriptExecution.getId(), statusMessage);
             var output = ScriptExecutionOutputDTO.builder()
                 .inputId(scriptExecution.getId())
-                .statusCode(ResponseStatusCode.INTERRUPTED_BY_WATCHDOG)
+                .statusCode(ResponseStatusCode.RESCHEDULED_BY_WATCHDOG)
                 .statusMessage(statusMessage)
                 .exitCode(0)
                 .output("")

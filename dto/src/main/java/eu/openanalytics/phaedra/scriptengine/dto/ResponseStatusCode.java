@@ -13,7 +13,7 @@ public enum ResponseStatusCode {
             return true;
         }
     },
-    INTERRUPTED_BY_WATCHDOG {
+    RESCHEDULED_BY_WATCHDOG {
         @Override
         public boolean canBeRetried() {
             return true;

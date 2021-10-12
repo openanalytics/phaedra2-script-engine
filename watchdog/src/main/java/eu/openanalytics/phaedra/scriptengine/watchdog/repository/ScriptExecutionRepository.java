@@ -66,8 +66,8 @@ public class ScriptExecutionRepository {
     }
 
     public void interruptScriptExecution(String id) {
-        if (!stopScriptExecution(id, ResponseStatusCode.INTERRUPTED_BY_WATCHDOG)) {
-            stopScriptExecution(id, ResponseStatusCode.INTERRUPTED_BY_WATCHDOG);
+        if (!stopScriptExecution(id, ResponseStatusCode.RESCHEDULED_BY_WATCHDOG)) {
+            stopScriptExecution(id, ResponseStatusCode.RESCHEDULED_BY_WATCHDOG);
         }
     }
 
