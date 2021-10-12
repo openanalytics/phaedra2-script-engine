@@ -4,6 +4,7 @@ import eu.openanalytics.phaedra.scriptengine.dto.HeartbeatDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
 import eu.openanalytics.phaedra.scriptengine.watchdog.model.ScriptExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,18 +25,21 @@ import java.util.List;
 public class ScriptExecutionRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    private final WatchDogConfig watchDogConfig;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ScriptExecutionRepository(JdbcTemplate jdbcTemplate) {
+    public ScriptExecutionRepository(JdbcTemplate jdbcTemplate, WatchDogConfig watchDogConfig) {
         this.jdbcTemplate = jdbcTemplate;
+        this.watchDogConfig = watchDogConfig;
     }
 
     /**
      * Creates a scriptExecution.
      */
     public void createWatch(ScriptExecutionInputDTO input, String routingKey) {
-        if (!_createWatch(input.getId(), input.getQueueTimestamp(), routingKey)) {
-            _createWatch(input.getId(), input.getQueueTimestamp(), routingKey);
+        var outputRoutingKey = watchDogConfig.getOutputRoutingKeyPrefix() + input.getResponseTopicSuffix();
+        if (!_createWatch(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey)) {
+            _createWatch(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey);
         }
     }
 
@@ -77,13 +81,13 @@ public class ScriptExecutionRepository {
         return jdbcTemplate.queryForObject("SELECT * FROM script_execution WHERE id = ? FOR UPDATE", new RowMapper(), id);
     }
 
-    public List<ScriptExecution> findToInterrupt(String routingKey, LocalDateTime notBefore) {
+    public List<ScriptExecution> findToInterrupt(String inputRoutingKey, LocalDateTime notBefore) {
         var date = Timestamp.valueOf(notBefore);
         return jdbcTemplate.query(
-            "SELECT * FROM script_execution WHERE routing_key = ? " +
+            "SELECT * FROM script_execution WHERE input_routing_key = ? " +
                 "AND last_heartbeat < ?" +
                 "AND last_heartbeat IS NOT NULL " +
-                "AND response_status_code IS NULL", new RowMapper(), routingKey, notBefore);
+                "AND response_status_code IS NULL", new RowMapper(), inputRoutingKey, notBefore);
     }
 
     /**
@@ -107,13 +111,13 @@ public class ScriptExecutionRepository {
      * @return whether the record was successfully created/updated. May be false when the record was created while calling this function.
      */
     @Transactional
-    protected boolean _createWatch(String id, long queuetimestmap, String routingKey) {
+    protected boolean _createWatch(String id, long queuetimestmap, String inputRoutingKey, String outputRoutingKey) {
         var queuedTimestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(queuetimestmap), ZoneId.systemDefault());
 
         if (!existsWithLock(id)) {
             // record does not exist -> try to create it
             try {
-                jdbcTemplate.update("INSERT INTO script_execution (id, queue_timestamp, routing_key) VALUES (?, ?, ?)", id, queuedTimestamp, routingKey);
+                jdbcTemplate.update("INSERT INTO script_execution (id, queue_timestamp, input_routing_key, output_routing_key) VALUES (?, ?, ?, ?)", id, queuedTimestamp, inputRoutingKey, outputRoutingKey);
             } catch (DuplicateKeyException e) {
                 // record was created in the meantime
                 logger.warn("Id: {} failed to create (INSERT failed)", id);
@@ -121,7 +125,7 @@ public class ScriptExecutionRepository {
             }
         } else {
             // record exists and locked -> update it
-            jdbcTemplate.update("UPDATE script_execution set queue_timestamp = ?, routing_key = ? WHERE id =?", queuedTimestamp, routingKey, id);
+            jdbcTemplate.update("UPDATE script_execution set queue_timestamp = ?, input_routing_key = ?, output_routing_key = ? WHERE id =?", queuedTimestamp, inputRoutingKey, outputRoutingKey, id);
         }
         return true;
     }
@@ -187,7 +191,8 @@ public class ScriptExecutionRepository {
                 .id(rs.getString("ID"))
                 .lastHeartbeat(rs.getObject("last_heartbeat", LocalDateTime.class))
                 .queueTimestamp(rs.getObject("queue_timestamp", LocalDateTime.class))
-                .routingKey(rs.getString("routing_key"));
+                .inputRoutingKey(rs.getString("input_routing_key"))
+                .outputRoutingKey(rs.getString("output_routing_key"));
 
             if (rs.getString("response_status_code") != null) {
                 res.responseStatusCode(ResponseStatusCode.valueOf(rs.getString("response_status_code")));

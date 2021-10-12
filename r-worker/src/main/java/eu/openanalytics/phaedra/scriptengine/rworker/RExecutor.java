@@ -21,10 +21,10 @@
 package eu.openanalytics.phaedra.scriptengine.rworker;
 
 import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
-import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
-import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
 import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
+import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
 
 import java.io.IOException;
 

@@ -65,7 +65,7 @@ public class WatchdogApplication {
         // output exchange (-> no queues)
         amqpAdmin.declareExchange(new TopicExchange(OUTPUT_EXCHANGE, true, false));
         amqpAdmin.declareQueue(new Queue(OUTPUT_QUEUE_NAME, true, false, false));
-        amqpAdmin.declareBinding(new Binding(OUTPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, OUTPUT_EXCHANGE, watchDogConfig.getOutputRoutingKey(), Map.of()));
+        amqpAdmin.declareBinding(new Binding(OUTPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, OUTPUT_EXCHANGE, watchDogConfig.getOutputRoutingKeyPrefix() + "*", Map.of()));
 
 
         amqpAdmin.declareExchange(new DirectExchange(HEARTBEAT_EXCHANGE, true, false));

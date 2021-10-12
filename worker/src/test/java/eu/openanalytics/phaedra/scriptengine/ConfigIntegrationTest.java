@@ -87,9 +87,28 @@ class ConfigIntegrationTest {
                 assertThat(context)
                     .hasFailed();
                 assertThat(context.getStartupFailure().getMessage())
+                    .contains("Incorrect configuration detected: phaedra2.script-engine-worker.env.heartbeatInterval not set");
+            });
+
+        this.contextRunner
+            .withPropertyValues(
+                "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
+                "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort(),
+                "phaedra2.script-engine-worker.env.language=noop",
+                "phaedra2.script-engine-worker.env.pool-name=ast-lane",
+                "phaedra2.script-engine-worker.env.version=v1",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2")
+            .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
+            .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
+            .run(context -> {
+                assertThat(context)
+                    .hasFailed();
+                assertThat(context.getStartupFailure().getMessage())
                     .contains("Incorrect configuration detected: phaedra2.script-engine-worker.workspace not set");
             });
 
+
+
         this.contextRunner
             .withPropertyValues(
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
@@ -97,7 +116,8 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
-                "phaedra2.script-engine-worker.workspace=test")
+                "phaedra2.script-engine-worker.workspace=test",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2")
             .withUserConfiguration(ScriptEngineWorkerApplication.class, Configuration.class)
             .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
@@ -115,7 +135,8 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
-                "phaedra2.script-engine-worker.workspace=/test")
+                "phaedra2.script-engine-worker.workspace=/test",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2")
             .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
@@ -132,7 +153,8 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.language=noop",
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
-                "phaedra2.script-engine-worker.workspace=/test/")
+                "phaedra2.script-engine-worker.workspace=/test/",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2")
             .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
             .run(context -> {
                 assertThat(context)
@@ -150,6 +172,7 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=/tmp/",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2",
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
                 "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
             .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)
@@ -169,6 +192,7 @@ class ConfigIntegrationTest {
                 "phaedra2.script-engine-worker.env.pool-name=ast-lane",
                 "phaedra2.script-engine-worker.env.version=v1",
                 "phaedra2.script-engine-worker.workspace=/tmp/",
+                "phaedra2.script-engine-worker.env.heartbeatInterval=2",
                 "spring.rabbitmq.host=" + rabbitMQContainer.getHost(),
                 "spring.rabbitmq.port=" + rabbitMQContainer.getAmqpPort())
             .withBean(ExternalProcessConfig.class, ExternalProcessConfig::new)

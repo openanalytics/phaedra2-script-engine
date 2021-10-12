@@ -11,8 +11,11 @@ public class WatchDogConfig {
 
     private List<Target> targets;
 
-    public String getOutputRoutingKey() {
-        return "scriptengine.output.CalculationService";
+    /**
+     * @return the prefix of the topic used in output messages on the output exchange.
+     */
+    public String getOutputRoutingKeyPrefix() {
+        return "scriptengine.output.";
     }
 
     public List<Target> getTargets() {

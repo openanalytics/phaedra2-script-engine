@@ -104,7 +104,7 @@ class WatchdogApplicationTests {
 
         var res = watchService.findById(id);
         Assertions.assertEquals(id, res.getId());
-        Assertions.assertEquals("scriptengine.input.fast-lane.JavaStat.v1", res.getRoutingKey());
+        Assertions.assertEquals("scriptengine.input.fast-lane.JavaStat.v1", res.getInputRoutingKey());
         Assertions.assertEquals(ResponseStatusCode.SUCCESS, res.getResponseStatusCode());
         Assertions.assertNotNull(res.getLastHeartbeat());
         Assertions.assertNotNull(res.getQueueTimestamp());

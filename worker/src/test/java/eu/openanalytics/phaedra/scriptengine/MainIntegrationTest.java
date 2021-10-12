@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,9 +59,6 @@ public class MainIntegrationTest {
     private AmqpAdmin amqpAdmin;
 
     @Autowired
-    private MessageListenerService messagePollerService;
-
-    @Autowired
     private DirectMessageListenerContainer directMessageListenerContainer;
 
     @Container
@@ -100,7 +96,7 @@ public class MainIntegrationTest {
     }
 
     @Test
-    public void testThatOutputQueueIsDurable() throws ExecutionException, InterruptedException, TimeoutException {
+    public void testThatOutputQueueIsDurable() throws InterruptedException {
         // create output exchange, queue and binding
         amqpAdmin.declareExchange(new TopicExchange("scriptengine_output", true, false));
         amqpAdmin.declareQueue(new Queue("scriptengine_output", true, false, false));
@@ -122,7 +118,7 @@ public class MainIntegrationTest {
     }
 
     @Test
-    public void testThatInputQueueIsDurable() throws ExecutionException, InterruptedException, TimeoutException {
+    public void testThatInputQueueIsDurable() throws InterruptedException {
         // create output exchange, queue and binding
         amqpAdmin.declareExchange(new TopicExchange("scriptengine_output", true, false));
         amqpAdmin.declareQueue(new Queue("scriptengine_output", true, false, false));

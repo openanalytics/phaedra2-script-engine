@@ -77,7 +77,7 @@ public class HeartbeatCheckerService {
             scriptExecutionRepository.stopScriptExecution(output);
 
             try {
-                rabbitTemplate.send(OUTPUT_EXCHANGE, config.getOutputRoutingKey(), new Message(objectMapper.writeValueAsBytes(output)));
+                rabbitTemplate.send(OUTPUT_EXCHANGE, scriptExecution.getOutputRoutingKey(), new Message(objectMapper.writeValueAsBytes(output)));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

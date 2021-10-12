@@ -16,7 +16,9 @@ public class ScriptExecution {
     @Id
     String id;
 
-    String routingKey;
+    String inputRoutingKey;
+
+    String outputRoutingKey;
 
     LocalDateTime queueTimestamp;
 

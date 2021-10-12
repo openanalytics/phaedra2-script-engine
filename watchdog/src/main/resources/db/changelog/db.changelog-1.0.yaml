@@ -33,3 +33,19 @@ databaseChangeLog:
                     nullable: true
                   name: response_status_code
                   type: TEXT
+  - changeSet:
+      id: 2
+      author: tdekoninck
+      changes:
+        - renameColumn:
+            oldColumnName: routing_key
+            newColumnName: input_routing_key
+            tableName: script_execution
+        - addColumn:
+            tableName: script_execution
+            columns:
+              - column:
+                  name: output_routing_key
+                  constraints:
+                    nullable: true
+                  type: text
