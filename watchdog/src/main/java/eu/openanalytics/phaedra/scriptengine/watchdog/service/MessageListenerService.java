@@ -11,8 +11,6 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-
 import static eu.openanalytics.phaedra.scriptengine.watchdog.WatchdogApplication.HEARTBEAT_QUEUE_NAME;
 import static eu.openanalytics.phaedra.scriptengine.watchdog.WatchdogApplication.INPUT_QUEUE_NAME;
 import static eu.openanalytics.phaedra.scriptengine.watchdog.WatchdogApplication.OUTPUT_QUEUE_NAME;
@@ -31,9 +29,9 @@ public class MessageListenerService implements MessageListener {
     @Override
     public void onMessage(Message message) {
         try {
-            var routingKey = message.getMessageProperties().getReceivedRoutingKey();
             switch (message.getMessageProperties().getConsumerQueue()) {
                 case INPUT_QUEUE_NAME ->   {
+                    var routingKey = message.getMessageProperties().getReceivedRoutingKey();
                     var input = objectMapper.readValue(message.getBody(), ScriptExecutionInputDTO.class);
                     onInput(input, routingKey);
                 }
@@ -46,7 +44,7 @@ public class MessageListenerService implements MessageListener {
                     onHeartbeat(heartbeat);
                 }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
     }
