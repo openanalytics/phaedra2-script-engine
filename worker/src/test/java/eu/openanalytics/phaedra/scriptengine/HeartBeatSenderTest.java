@@ -13,7 +13,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import static eu.openanalytics.phaedra.scriptengine.ScriptEngineWorkerApplication.HEARTBEAT_EXCHANGE;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class HeartBeatSenderTest {
@@ -40,7 +39,7 @@ public class HeartBeatSenderTest {
 
         // expect 5+1 heartbeats
         var msg = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId("myId").build()));
-        verify(rabbiTemplate, times(6)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg);
+        verify(rabbiTemplate, atLeast(6)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg);
     }
 
     @Test
