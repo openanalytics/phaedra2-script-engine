@@ -20,7 +20,7 @@ public class Containers {
 
     static {
         postgreSQLContainer = new PostgreSQLContainer<>("postgres:13-alpine")
-                .withUrlParam("currentSchema","watchdog");
+            .withUrlParam("currentSchema", "watchdog");
 
         postgreSQLContainer.start();
         try {

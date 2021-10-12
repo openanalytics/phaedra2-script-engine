@@ -56,7 +56,7 @@ public class MessageListenerTest {
 
         listener.onMessage(input1);
 
-        verify(repository).stopScriptExecution(output );
+        verify(repository).stopScriptExecution(output);
         verifyNoMoreInteractions(repository);
     }
 

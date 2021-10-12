@@ -30,7 +30,7 @@ public class MessageListenerService implements MessageListener {
     public void onMessage(Message message) {
         try {
             switch (message.getMessageProperties().getConsumerQueue()) {
-                case INPUT_QUEUE_NAME ->   {
+                case INPUT_QUEUE_NAME -> {
                     var routingKey = message.getMessageProperties().getReceivedRoutingKey();
                     var input = objectMapper.readValue(message.getBody(), ScriptExecutionInputDTO.class);
                     onInput(input, routingKey);

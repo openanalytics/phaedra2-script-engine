@@ -79,6 +79,16 @@ public class ScriptExecutionRepository {
                 "AND response_status_code IS NULL", new RowMapper(), inputRoutingKey, notBefore);
     }
 
+    public int deleteExpiredEntries() {
+        var before = LocalDateTime.now().minusMinutes(60);
+        return jdbcTemplate.update("DELETE FROM script_execution WHERE last_heartbeat < ? AND response_status_code IS NOT NULL ", before);
+    }
+
+    public List<ScriptExecution> findAll() {
+        return jdbcTemplate.query("SELECT * FROM script_execution", new RowMapper());
+    }
+
+
     /**
      * Checks whether a ScriptExecution for the given id exists.
      * If it exists it locks the row in the database using the `FOR UPDATE` option.

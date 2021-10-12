@@ -101,7 +101,7 @@ public class HeartBeatCheckTest {
         Assertions.assertEquals("scriptengine.output.CalculationService", routingKeyCaptor.getAllValues().get(1));
         Assertions.assertEquals("scriptengine.output.CalculationService", routingKeyCaptor.getAllValues().get(2));
         Assertions.assertEquals(3, messageCaptor.getAllValues().size());
-        verifyNoMoreInteractions( rabbitTemplate);
+        verifyNoMoreInteractions(rabbitTemplate);
     }
 
 }
