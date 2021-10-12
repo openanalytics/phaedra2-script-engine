@@ -5,10 +5,12 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.With;
+import lombok.experimental.NonFinal;
 
 @Value
 @Builder
 @With
+@NonFinal
 public class ScriptExecutionOutputDTO {
 
     @NonNull

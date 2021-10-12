@@ -28,6 +28,7 @@ import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.service.HeartbeatSenderService;
 import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
+import lombok.NonNull;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -157,9 +158,12 @@ public class MessageListenerServiceUnitTest {
             heartbeatSenderService
         );
 
-        processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\"}".getBytes(StandardCharsets.UTF_8)), channel);
+        processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\", \"queueTimestamp\": 1024}}".getBytes(StandardCharsets.UTF_8)), channel);
 
         verify(channel).basicAck(0, false);
+        var input = new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L);
+        verify(heartbeatSenderService).sendAndStartHeartbeats(input);
+        verify(heartbeatSenderService).stopHeartbeats(input);
         verifyNoMoreInteractions(rabbiTemplate, channel, heartbeatSenderService);
     }
 
@@ -172,6 +176,32 @@ public class MessageListenerServiceUnitTest {
             },
             new EnvConfig(),
             scriptExecution -> new ScriptExecutionOutputDTO(null, null, null, null, 0),
+            heartbeatSenderService
+        );
+
+        processor.onMessage(new Message("{\"script\": \"myScript\", \"input\": \"myInput\", \"responseTopicSuffix\": \"myTopic\", \"id\": \"myId\", \"queueTimestamp\": 1024}".getBytes(StandardCharsets.UTF_8)), channel);
+        verify(channel).basicAck(0, false);
+        var input = new ScriptExecutionInputDTO("myId", "myScript", "myInput", "myTopic", 1024L);
+        verify(heartbeatSenderService).sendAndStartHeartbeats(input);
+        verify(heartbeatSenderService).stopHeartbeats(input);
+        verifyNoMoreInteractions(rabbiTemplate, channel, heartbeatSenderService);
+    }
+
+    @Test
+    public void executorReturnsUnserializableObject() throws IOException {
+        var res = new ScriptExecutionOutputDTO("myId", "", ResponseStatusCode.SUCCESS, "Ok", 0) {
+            @Override
+            public @NonNull String getStatusMessage() {
+                throw new RuntimeException("Break JSON serialization");
+            }
+        };
+        var processor = new MessageListenerService(
+            rabbiTemplate,
+            new ObjectMapper(),
+            event -> {
+            },
+            new EnvConfig(),
+            scriptExecution -> res,
             heartbeatSenderService
         );
 

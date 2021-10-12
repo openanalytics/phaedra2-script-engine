@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -108,7 +107,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         Path inputFile = workspace.resolve("input.json");
         try {
             Files.createFile(inputFile);
-            Files.write(inputFile, scriptExecution.getScriptExecutionInput().getInput().getBytes(StandardCharsets.UTF_8));
+            Files.writeString(inputFile, scriptExecution.getScriptExecutionInput().getInput());
         } catch (IOException e) {
             throw new WorkerException("Cannot create input file", e);
         }
@@ -118,7 +117,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         try {
             String script = getFullScript(scriptExecution);
             Files.createFile(scriptFile);
-            Files.write(scriptFile, script.getBytes(StandardCharsets.UTF_8));
+            Files.writeString(scriptFile, script);
         } catch (IOException e) {
             throw new WorkerException("Cannot create script file", e);
         }

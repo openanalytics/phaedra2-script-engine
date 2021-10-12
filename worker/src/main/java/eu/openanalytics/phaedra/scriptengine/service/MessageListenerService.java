@@ -82,16 +82,10 @@ public class MessageListenerService implements ChannelAwareMessageListener {
 
         try {
             var scriptExecutionOutput = executor.execute(input);
-            if (scriptExecutionOutput == null) {
-                heartbeatSenderService.stopHeartbeats(input);
-                return;
-            }
+            if (scriptExecutionOutput == null) return;
 
             var response = constructResponse(scriptExecutionOutput);
-            if (response == null) {
-                heartbeatSenderService.stopHeartbeats(input);
-                return;
-            }
+            if (response == null) return;
 
             rabbitTemplate.send(constructResponseRoutingKey(input), response);
             applicationEventPublisher.publishEvent(new ScriptProcessedEvent(this, input.getId()));
@@ -128,7 +122,7 @@ public class MessageListenerService implements ChannelAwareMessageListener {
         try {
             return new Message(objectMapper.writeValueAsBytes(scriptExecutionResult));
         } catch (Exception e) {
-            logger.warn("Cannot construct response message from execution result" + scriptExecutionResult, e);
+            logger.warn("Cannot construct response message from execution result" + scriptExecutionResult.getInputId(), e);
             return null;
         }
     }
