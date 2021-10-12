@@ -32,17 +32,19 @@ public class MessageListenerService implements MessageListener {
     public void onMessage(Message message) {
         try {
             var routingKey = message.getMessageProperties().getReceivedRoutingKey();
-            if (message.getMessageProperties().getConsumerQueue().equals(INPUT_QUEUE_NAME)) {
-                var input = objectMapper.readValue(message.getBody(), ScriptExecutionInputDTO.class);
-                onInput(input, routingKey);
-            } else if (message.getMessageProperties().getConsumerQueue().equals(OUTPUT_QUEUE_NAME)) {
-                var output = objectMapper.readValue(message.getBody(), ScriptExecutionOutputDTO.class);
-                onOutput(output);
-            } else if (message.getMessageProperties().getConsumerQueue().equals(HEARTBEAT_QUEUE_NAME)) {
-                var heartbeat = objectMapper.readValue(message.getBody(), HeartbeatDTO.class);
-                onHeartbeat(heartbeat);
-            } else {
-                // oops ...
+            switch (message.getMessageProperties().getConsumerQueue()) {
+                case INPUT_QUEUE_NAME ->   {
+                    var input = objectMapper.readValue(message.getBody(), ScriptExecutionInputDTO.class);
+                    onInput(input, routingKey);
+                }
+                case OUTPUT_QUEUE_NAME -> {
+                    var output = objectMapper.readValue(message.getBody(), ScriptExecutionOutputDTO.class);
+                    onOutput(output);
+                }
+                case HEARTBEAT_QUEUE_NAME -> {
+                    var heartbeat = objectMapper.readValue(message.getBody(), HeartbeatDTO.class);
+                    onHeartbeat(heartbeat);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -50,27 +52,18 @@ public class MessageListenerService implements MessageListener {
     }
 
     private void onHeartbeat(HeartbeatDTO heartbeat) {
-        logger.info("Heartbeat for - {}", heartbeat.getScriptExecutionId());
+        logger.debug("Heartbeat: {}", heartbeat.getScriptExecutionId());
         scriptExecutionRepository.updateScriptExecution(heartbeat);
     }
 
     public void onInput(ScriptExecutionInputDTO input, String routingKey) {
-        logger.info("Input for - {}", input.getId());
+        logger.debug("Input:      {}", input.getId());
         scriptExecutionRepository.createWatch(input, routingKey);
-//        var scriptExecution = ScriptExecution.builder()
-//            .scriptExecutionId(input.getId())
-//            .queueTimeStamp(input.getQueueTimestamp())
-//            .routingKey(routingKey)
-//            .build();
-
-//        logger.info("Input - {}", scriptExecution);
     }
 
     public void onOutput(ScriptExecutionOutputDTO output) {
-        logger.info("Output - {}", output.getInputId());
+        logger.debug("Output      {}", output.getInputId());
         scriptExecutionRepository.stopScriptExecution(output);
-//        var scriptExecution = ScriptExecution.builder()
-
     }
 
 }

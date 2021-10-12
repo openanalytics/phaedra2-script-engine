@@ -24,13 +24,11 @@ import static eu.openanalytics.phaedra.scriptengine.watchdog.WatchdogApplication
 public class HeartbeatCheckerService {
 
     private final Timer timer = new Timer();
-    private final WatchDogConfig config;
     private final ScriptExecutionRepository scriptExecutionRepository;
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
 
     public HeartbeatCheckerService(WatchDogConfig config, ScriptExecutionRepository scriptExecutionRepository, ObjectMapper objectMapper, RabbitTemplate rabbitTemplate) {
-        this.config = config;
         this.scriptExecutionRepository = scriptExecutionRepository;
         this.objectMapper = objectMapper;
         this.rabbitTemplate = rabbitTemplate;
@@ -65,7 +63,7 @@ public class HeartbeatCheckerService {
 
         private void interruptScriptExecution(ScriptExecution scriptExecution, LocalDateTime now) {
             var secondsSinceLastHeartbeat = Duration.between(scriptExecution.getLastHeartbeat(), now).toMillis();
-            var statusMessage = String.format("Rescheduled by WatchDog because heartbeat was %sms ago (expects to receive heartbeat every %s seconds)", secondsSinceLastHeartbeat, target.getHeartbeatInterval());
+            var statusMessage = String.format("Rescheduled by WatchDog because heartbeat was %sms ago (expects to receive heartbeat every %s seconds and allow to miss less than %s heartbeats)", secondsSinceLastHeartbeat, target.getHeartbeatInterval(), target.getMaxMissedHeartbeats());
             logger.warn("ScriptExecution with id {} {} ", scriptExecution.getId(), statusMessage);
             var output = ScriptExecutionOutputDTO.builder()
                 .inputId(scriptExecution.getId())

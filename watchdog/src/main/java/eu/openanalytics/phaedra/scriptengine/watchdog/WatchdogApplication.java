@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.scriptengine.watchdog;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
@@ -13,23 +14,32 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.amqp.ConnectionFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.Map;
 
 @SpringBootApplication
 public class WatchdogApplication {
 
-    private final Environment environment;
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private AmqpAdmin amqpAdmin;
+
+    @Autowired
+    private WatchDogConfig watchDogConfig;
 
     public static void main(String[] args) {
         SpringApplication.run(WatchdogApplication.class, args);
     }
-
 
     public final static String INPUT_EXCHANGE = "scriptengine_input";
     public final static String INPUT_QUEUE_NAME = "watchdog_input";
@@ -38,41 +48,28 @@ public class WatchdogApplication {
     public final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
     public final static String HEARTBEAT_QUEUE_NAME = "watchdog_heartbeat";
 
-    public WatchdogApplication(AmqpAdmin amqpAdmin, WatchDogConfig watchDogConfig, Environment environment) {
-//        this.envConfig = envConfig;
-//        inputQueueName = envConfig.getInputQueueName();
-
+    @PostConstruct
+    public void init() {
         // input exchange and queues
-
-//        logger.info("Using {} as name for the input exchange", inputExchangeName);
-//        logger.info("Using {} as name for the input queue", inputQueueName);
-//        logger.info("Using {} as routing key for the input queue", inputQueueName);
-//        logger.info("Using {} as name for the output exchange", outputExchangeName);
-//        logger.info("Using {} as routing key prefix for the output exchange", envConfig.getOutputRoutingKeyPrefix());
-        this.environment = environment;
-    }
-
-    // TODO thread factory name?
-
-    @Bean
-    public DirectMessageListenerContainer messageListenerContainer(AmqpAdmin amqpAdmin, ConnectionFactory connectionFactory, WatchDogConfig watchDogConfig, MessageListenerService messageListenerService) {
-        // TODO fix this
         amqpAdmin.declareExchange(new DirectExchange(INPUT_EXCHANGE, true, false));
         amqpAdmin.declareQueue(new Queue(INPUT_QUEUE_NAME, true, false, false));
         for (var target : watchDogConfig.getTargets()) {
             amqpAdmin.declareBinding(new Binding(INPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, INPUT_EXCHANGE, target.getRoutingKey(), Map.of()));
         }
-        // output exchange (-> no queues)
+
+        // output exchange and queue
         amqpAdmin.declareExchange(new TopicExchange(OUTPUT_EXCHANGE, true, false));
         amqpAdmin.declareQueue(new Queue(OUTPUT_QUEUE_NAME, true, false, false));
         amqpAdmin.declareBinding(new Binding(OUTPUT_QUEUE_NAME, Binding.DestinationType.QUEUE, OUTPUT_EXCHANGE, watchDogConfig.getOutputRoutingKeyPrefix() + "*", Map.of()));
 
-
+        // heartbeat exchange and queue
         amqpAdmin.declareExchange(new DirectExchange(HEARTBEAT_EXCHANGE, true, false));
-        // TODO make it exclusive?
         amqpAdmin.declareQueue(new Queue(HEARTBEAT_QUEUE_NAME, true, false, false));
         amqpAdmin.declareBinding(new Binding(HEARTBEAT_QUEUE_NAME, Binding.DestinationType.QUEUE, HEARTBEAT_EXCHANGE, "heartbeat", Map.of()));
+    }
 
+    @Bean
+    public DirectMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory, MessageListenerService messageListenerService) {
         var container = new DirectMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addQueueNames(INPUT_QUEUE_NAME, OUTPUT_QUEUE_NAME, HEARTBEAT_QUEUE_NAME);
@@ -81,7 +78,6 @@ public class WatchdogApplication {
         container.setConsumersPerQueue(8);
         return container;
     }
-
 
     @Bean
     public DataSource dataSource() {
@@ -108,6 +104,14 @@ public class WatchdogApplication {
         config.setAutoCommit(true);
 
         return new HikariDataSource(config);
+    }
+
+    @Bean
+    public ConnectionFactoryCustomizer connectionFactoryCustomizer() {
+        return factory -> {
+            var threadFactory = new ThreadFactoryBuilder().setNameFormat("rabbitmq-con-%s").build();
+            factory.setThreadFactory(threadFactory);
+        };
     }
 
 }

@@ -65,12 +65,6 @@ public class ScriptExecutionRepository {
         }
     }
 
-    public void interruptScriptExecution(String id) {
-        if (!stopScriptExecution(id, ResponseStatusCode.RESCHEDULED_BY_WATCHDOG)) {
-            stopScriptExecution(id, ResponseStatusCode.RESCHEDULED_BY_WATCHDOG);
-        }
-    }
-
     /**
      * Find a ScriptExecution by id.
      *
@@ -120,7 +114,6 @@ public class ScriptExecutionRepository {
                 jdbcTemplate.update("INSERT INTO script_execution (id, queue_timestamp, input_routing_key, output_routing_key) VALUES (?, ?, ?, ?)", id, queuedTimestamp, inputRoutingKey, outputRoutingKey);
             } catch (DuplicateKeyException e) {
                 // record was created in the meantime
-                logger.warn("Id: {} failed to create (INSERT failed)", id);
                 return false;
             }
         } else {
@@ -148,7 +141,6 @@ public class ScriptExecutionRepository {
                 jdbcTemplate.update("INSERT INTO script_execution (id, last_heartbeat) VALUES (?, ?)", id, lastHeartbeat);
             } catch (DuplicateKeyException ex) {
                 // record was created in the meantime
-                logger.warn("Id: {} failed to update (INSERT failed)", id);
                 return false;
             }
         } else {
@@ -173,7 +165,6 @@ public class ScriptExecutionRepository {
                 jdbcTemplate.update("INSERT INTO script_execution (id, response_status_code) VALUES (?, ?)", id, statusCode.toString());
             } catch (DuplicateKeyException ex) {
                 // record was created in the meantime
-                logger.warn("Id: {} failed to stop (INSERT failed)", id);
                 return false;
             }
         } else {
