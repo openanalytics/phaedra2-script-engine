@@ -11,6 +11,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import static eu.openanalytics.phaedra.scriptengine.ScriptEngineWorkerApplication.HEARTBEAT_EXCHANGE;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -87,15 +88,15 @@ public class HeartBeatSenderTest {
 
         // expect 2+1 heartbeats for id1
         var msg1 = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId("id1").build()));
-        verify(rabbiTemplate, times(3)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg1);
+        verify(rabbiTemplate, atLeast(3)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg1);
 
         // expect 5+1 heartbeats for id1
         var msg2 = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId("id2").build()));
-        verify(rabbiTemplate, times(6)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg2);
+        verify(rabbiTemplate, atLeast(6)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg2);
 
         // expect 4+1 heartbeats for id1
         var msg3 = new Message(objectMapper.writeValueAsBytes(HeartbeatDTO.builder().scriptExecutionId("id3").build()));
-        verify(rabbiTemplate, times(5)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg3);
+        verify(rabbiTemplate, atLeast(5)).send(HEARTBEAT_EXCHANGE, "heartbeat", msg3);
     }
 
 }
