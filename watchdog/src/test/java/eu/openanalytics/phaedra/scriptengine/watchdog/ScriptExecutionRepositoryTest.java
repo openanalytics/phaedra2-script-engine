@@ -59,6 +59,8 @@ class ScriptExecutionRepositoryTest {
         registry.add("DB_NAME", Containers.postgreSQLContainer::getDatabaseName);
         registry.add("DB_USER", Containers.postgreSQLContainer::getUsername);
         registry.add("DB_PASSWORD", Containers.postgreSQLContainer::getPassword);
+        registry.add("spring.rabbitmq.host", Containers.rabbitMQContainer::getHost);
+        registry.add("spring.rabbitmq.port", Containers.rabbitMQContainer::getAmqpPort);
     }
 
     @Test
