@@ -128,6 +128,7 @@ class ScriptExecutionRepositoryTest {
 
         thread1.join();
         thread2.join();
+        thread3.join();
 
         var res = repository.findById(id);
         Assertions.assertEquals(id, res.getId());
