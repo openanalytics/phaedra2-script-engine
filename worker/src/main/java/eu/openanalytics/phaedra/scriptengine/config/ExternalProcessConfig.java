@@ -1,7 +1,7 @@
 /**
- * ContainerProxy
+ * Phaedra II
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2022 Open Analytics
  *
  * ===========================================================================
  *
