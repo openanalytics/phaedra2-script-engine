@@ -22,6 +22,7 @@ RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
 
 RUN R -e "install.packages('rjson')"
+RUN R -e "install.packages('glpgPhaedra')"
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER

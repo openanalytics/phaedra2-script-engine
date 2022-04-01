@@ -79,6 +79,7 @@ LABEL maintainer="Tobia De Koninck <tdekoninck@openanalytics.eu>"
 ENV PHAEDRA_USER phaedra
 
 RUN R -e "install.packages('rjson')"
+RUN R -e "install.packages('glpgPhaedra')"
 
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
