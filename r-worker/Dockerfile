@@ -10,7 +10,7 @@ RUN apt-get update -y && \
     unzip -p  /opt/phaedra2/phaedra2-scriptengine-worker.jar META-INF/MANIFEST.MF | sed -En 's/Implementation-Version: (.*)\r/\1/gp' > /opt/phaedra2/VERSION
 
 # FINAL IMAGE
-FROM openanalytics/r-base
+FROM openanalytics/r-base:3.6.1
 
 RUN set -eux; \
 	apt-get update; \
