@@ -80,9 +80,6 @@ ENV PHAEDRA_USER phaedra
 
 RUN R -e "install.packages('rjson')"
 
-ADD user_package_library/glpgPhaedra_0.1.6.tar.gz ~/user_package_library/glpgPhaedra_0.1.6.tar.gz
-RUN R -e "install.packages('~/user_package_library/glpgPhaedra_0.1.6.tar.gz',repos=NULL, type='source')"
-
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
 
