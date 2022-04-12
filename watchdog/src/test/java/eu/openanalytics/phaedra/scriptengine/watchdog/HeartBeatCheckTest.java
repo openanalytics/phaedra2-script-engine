@@ -41,9 +41,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -67,8 +67,8 @@ public class HeartBeatCheckTest {
 
         Thread.sleep(5000);
 
-        // repository should have been checked 5 times now
-        verify(repository, times(5)).findToInterrupt(eq("myRoutingKey1"), any());
+        // repository should have been checked at least 5 times now
+        verify(repository, atLeast(5)).findToInterrupt(eq("myRoutingKey1"), any());
 
         verifyNoMoreInteractions(repository, rabbitTemplate);
     }
@@ -99,8 +99,8 @@ public class HeartBeatCheckTest {
 
         Thread.sleep(2000);
 
-        verify(repository, times(3)).stopScriptExecution(outputCaptor.capture());
-        verify(rabbitTemplate, times(3)).send(eq(OUTPUT_EXCHANGE), routingKeyCaptor.capture(), messageCaptor.capture());
+        verify(repository, atLeast(3)).stopScriptExecution(outputCaptor.capture());
+        verify(rabbitTemplate, atLeast(3)).send(eq(OUTPUT_EXCHANGE), routingKeyCaptor.capture(), messageCaptor.capture());
 
         Assertions.assertEquals(3, outputCaptor.getAllValues().size());
 

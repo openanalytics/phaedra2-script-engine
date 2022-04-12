@@ -23,6 +23,7 @@
         <module>client/</module>
         <module>worker/</module>
         <module>r-worker</module>
+        <module>watchdog</module>
         <module>java-stat-worker</module>
     </modules>
 

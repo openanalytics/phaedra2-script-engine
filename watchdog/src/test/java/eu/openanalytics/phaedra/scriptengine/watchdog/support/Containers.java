@@ -29,6 +29,7 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.sql.SQLException;
@@ -38,11 +39,16 @@ public class Containers {
     @Container
     public static final PostgreSQLContainer<?> postgreSQLContainer;
 
+    @Container
+    public static final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer("rabbitmq:3-management")
+        .withAdminPassword(null);
+
     static {
         postgreSQLContainer = new PostgreSQLContainer<>("postgres:13-alpine")
             .withUrlParam("currentSchema", "watchdog");
 
         postgreSQLContainer.start();
+        rabbitMQContainer.start();
         try {
             var connection = postgreSQLContainer.createConnection("");
             connection.createStatement().executeUpdate("create schema watchdog");
