@@ -23,6 +23,7 @@ COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaed
 
 RUN R -e "install.packages('rjson')"
 RUN R -e "install.packages('glpgPhaedra')"
+RUN R -e "install.packages('receptor2')"
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
