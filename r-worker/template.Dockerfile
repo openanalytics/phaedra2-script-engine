@@ -11,6 +11,12 @@ RUN apt-get update -y && \
 
 # FINAL IMAGE
 FROM openanalytics/r-base
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+        build-essential cmake \
+    ; \
+
 
 #<<<INSTALL_JAVA>>>#
 
