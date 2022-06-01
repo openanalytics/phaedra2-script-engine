@@ -205,3 +205,6 @@ target/
 .classpath
 
 application.yml
+/phaedra2-scriptengine.iml
+/r-worker/phaedra2-scriptengine-r-worker.iml
+/r-worker/.Rhistory

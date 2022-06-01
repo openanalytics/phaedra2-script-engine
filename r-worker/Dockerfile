@@ -10,7 +10,10 @@ RUN apt-get update -y && \
     unzip -p  /opt/phaedra2/phaedra2-scriptengine-worker.jar META-INF/MANIFEST.MF | sed -En 's/Implementation-Version: (.*)\r/\1/gp' > /opt/phaedra2/VERSION
 
 # FINAL IMAGE
-FROM openanalytics/r-base:3.6.1
+FROM rocker/r-base:4.0.4
+RUN apt-get update -y && \
+    apt-get install unzip && \
+    apt-get install -y --no-install-recommends build-essential cmake
 
 RUN set -eux; \
 	apt-get update; \
@@ -26,21 +29,21 @@ RUN set -eux; \
 		ca-certificates p11-kit \
 	; \
 	rm -rf /var/lib/apt/lists/*
-ENV JAVA_HOME /usr/local/openjdk-16
+ENV JAVA_HOME /usr/local/openjdk-18
 ENV PATH $JAVA_HOME/bin:$PATH
 ENV LANG C.UTF-8
-ENV JAVA_VERSION 16.0.2
+ENV JAVA_VERSION 18.0.1.1
 RUN set -eux; \
 	\
 	arch="$(dpkg --print-architecture)"; \
 	case "$arch" in \
 		'amd64') \
-			downloadUrl='https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz'; \
-			downloadSha256='6c714ded7d881ca54970ec949e283f43d673a142fda1de79b646ddd619da9c0c'; \
+			downloadUrl='https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-x64_bin.tar.gz'; \
+			downloadSha256='4f81af7203fa4c8a12c9c53c94304aab69ea1551bc6119189c9883f4266a2b24'; \
 			;; \
 		'arm64') \
-			downloadUrl='https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz'; \
-			downloadSha256='1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe'; \
+			downloadUrl='https://download.java.net/java/GA/jdk18.0.1.1/65ae32619e2f40f3a9af3af1851d6e19/2/GPL/openjdk-18.0.1.1_linux-aarch64_bin.tar.gz'; \
+			downloadSha256='e667166c47e90874af3641ad4a3952d3c835627e4301fa1f0d620d9b6e366519'; \
 			;; \
 		*) echo >&2 "error: unsupported architecture: '$arch'"; exit 1 ;; \
 	esac; \
@@ -78,10 +81,26 @@ LABEL maintainer="Tobia De Koninck <tdekoninck@openanalytics.eu>"
 
 ENV PHAEDRA_USER phaedra
 
-RUN R -e "install.packages('rjson')"
-
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
+
+ADD user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
+ADD user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
+
+RUN R -e "install.packages('rjson')"
+RUN R -e "install.packages('plyr')"
+RUN R -e "install.packages('ape')"
+RUN R -e "install.packages('reshape2')"
+RUN R -e "install.packages('kSamples')"
+RUN R -e "install.packages('nloptr')"
+RUN R -e "install.packages('lme4')"
+RUN R -e "install.packages('pbkrtest')"
+RUN R -e "install.packages('car')"
+RUN R -e "install.packages('drc')"
+RUN R -e "install.packages('ggplot2')"
+
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra',repos=NULL, type='source')"
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
