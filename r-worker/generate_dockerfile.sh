@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-curl https://raw.githubusercontent.com/docker-library/openjdk/master/16/jdk/buster/Dockerfile -o java.Dockerfile
+curl https://raw.githubusercontent.com/docker-library/openjdk/master/18/jdk/buster/Dockerfile -o java.Dockerfile
 
 sed -i "s/^FROM.*//g" java.Dockerfile
 sed -i "s/^CMD.*//g" java.Dockerfile
