@@ -4,6 +4,7 @@ pipeline {
         kubernetes {
             yamlFile 'kubernetesPod.yaml'
             defaultContainer 'builder'
+            workspaceVolume dynamicPVC(accessModes: 'ReadWriteOnce', requestSize: '40Gi')
         }
     }
 
