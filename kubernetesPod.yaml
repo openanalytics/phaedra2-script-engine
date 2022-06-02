@@ -15,7 +15,7 @@ spec:
      volumeMounts:
        - name: workspace-volume
          subPath: docker
-         mounthPath: /var/lib/docker
+         mountPath: /var/lib/docker
      resources:
        requests:
          ephemeral-storage: "16Gi"
