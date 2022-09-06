@@ -25,12 +25,14 @@ import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
 import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
 /**
  * Implemention of {@link IExecutor} that can execute R scripts.
  */
+@Slf4j
 public class RExecutor extends ExternalProcessExecutor {
 
     public RExecutor(ExternalProcessConfig config) {
@@ -39,14 +41,17 @@ public class RExecutor extends ExternalProcessExecutor {
 
     @Override
     protected String getFullScript(ScriptExecution scriptExecution) {
-        return
-            "fh <- file(\"input.json\")\n" +
-                "input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n" +
-                "close(fh)\n" +
-                scriptExecution.getScriptExecutionInput().getScript() + "\n" +
-                "fh <- file(\"output.json\")\n" +
-                "writeLines(rjson::toJSON(list(output = output)), fh)\n" +
-                "close(fh)\n";
+        String fullScript = "fh <- file(\"input.json\")\n" +
+            "input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n" +
+            "close(fh)\n" +
+            scriptExecution.getScriptExecutionInput().getScript() + "\n" +
+            "fh <- file(\"output.json\")\n" +
+            "writeLines(rjson::toJSON(list(output = output)), fh)\n" +
+            "close(fh)\n";
+        log.info("Full script: " + fullScript);
+
+        return fullScript;
+
     }
 
     @Override
