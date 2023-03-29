@@ -20,8 +20,16 @@
  */
 package eu.openanalytics.phaedra.scriptengine.javastatworker;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
@@ -37,12 +45,6 @@ import eu.openanalytics.phaedra.scriptengine.javastatworker.impl.SkewnessCalcula
 import eu.openanalytics.phaedra.scriptengine.javastatworker.impl.SnCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.impl.StDevCalculator;
 import eu.openanalytics.phaedra.scriptengine.javastatworker.impl.ZPrimeCalculator;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 
 //@Testcontainers
 //@ExtendWith(SpringExtension.class)
@@ -70,8 +72,6 @@ public class JavaStatExecutorTest {
                 put("isWelltypeStat", true);
             }}))
             .script("JavaStat::count")
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
         var output = javaStatExecutor.execute(input);
 
@@ -286,8 +286,6 @@ public class JavaStatExecutorTest {
                 put("isWelltypeStat", isWelltypeStat);
             }}))
             .script("JavaStat::" + statCalculator.getName())
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
         return javaStatExecutor.execute(input);
     }
@@ -311,8 +309,6 @@ public class JavaStatExecutorTest {
                 put("isWelltypeStat", isWelltypeStat);
             }}))
             .script("JavaStat::" + statCalculator.getName())
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
         return javaStatExecutor.execute(input);
     }
@@ -335,8 +331,6 @@ public class JavaStatExecutorTest {
                 put("isWelltypeStat", true);
             }}))
             .script("AnInvalidFormula")
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
 
         var output = javaStatExecutor.execute(input);
@@ -365,8 +359,6 @@ public class JavaStatExecutorTest {
                 put("isWelltypeStat", true);
             }}))
             .script("JavaStat::mean")
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
 
         var output = javaStatExecutor.execute(input);
@@ -384,8 +376,6 @@ public class JavaStatExecutorTest {
             .id("myId")
             .input("{\"invalid_json..")
             .script("JavaStat::mean")
-            .responseTopicSuffix("mySuffix")
-            .queueTimestamp(System.currentTimeMillis())
             .build();
 
         var output = javaStatExecutor.execute(input);

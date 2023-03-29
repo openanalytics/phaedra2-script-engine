@@ -24,7 +24,10 @@ package eu.openanalytics.phaedra.scriptengine.exception;
  * Exception which is not caused by the Script being executed but by any other problem in the worker itself.
  */
 public class WorkerException extends Exception {
-    public WorkerException(String msg, Throwable cause) {
+
+	private static final long serialVersionUID = -8138459570652687305L;
+
+	public WorkerException(String msg, Throwable cause) {
         super(msg, cause);
     }
 

@@ -20,22 +20,12 @@
  */
 package eu.openanalytics.phaedra.scriptengine;
 
-import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
-import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
-import eu.openanalytics.phaedra.scriptengine.executor.IExecutorRegistration;
-import eu.openanalytics.phaedra.scriptengine.service.MessageListenerService;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AcknowledgeMode;
-import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.DirectMessageListenerContainer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -43,61 +33,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
+import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutorRegistration;
 
 @EnableAsync
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class ScriptEngineWorkerApplication {
 
-    @Autowired
-    private MessageListenerService messagePollerService;
-
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    public final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
+    
     private final EnvConfig envConfig;
-
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(ScriptEngineWorkerApplication.class);
-        setDefaultProperties(app);
         app.run(args);
     }
 
-    private final String inputQueueName;
-    private final String outputExchangeName = "scriptengine_output";
-    public final static String HEARTBEAT_EXCHANGE = "scriptengine_heartbeat";
-
-    public ScriptEngineWorkerApplication(AmqpAdmin amqpAdmin, EnvConfig envConfig) {
+    public ScriptEngineWorkerApplication(EnvConfig envConfig) {
         this.envConfig = envConfig;
-        inputQueueName = envConfig.getInputQueueName();
-
-        // input exchange and queues
-        String inputExchangeName = "scriptengine_input";
-        amqpAdmin.declareExchange(new DirectExchange(inputExchangeName, true, false));
-        amqpAdmin.declareQueue(new Queue(inputQueueName, true, false, false));
-        amqpAdmin.declareBinding(new Binding(inputQueueName, Binding.DestinationType.QUEUE, inputExchangeName, inputQueueName, Map.of()));
-
-        // output exchange (-> no queues)
-        amqpAdmin.declareExchange(new TopicExchange(outputExchangeName, true, false));
-
-        // heartbeat exchange
-        amqpAdmin.declareExchange(new DirectExchange(HEARTBEAT_EXCHANGE, true, false));
-
-        logger.info("Using {} as name for the input exchange", inputExchangeName);
-        logger.info("Using {} as name for the input queue", inputQueueName);
-        logger.info("Using {} as routing key for the input queue", inputQueueName);
-        logger.info("Using {} as name for the output exchange", outputExchangeName);
-        logger.info("Using {} as routing key prefix for the output exchange", envConfig.getOutputRoutingKeyPrefix());
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setDefaultReceiveQueue(inputQueueName);
-        template.setExchange(outputExchangeName);
-        return template;
     }
 
     @Bean
@@ -120,27 +75,6 @@ public class ScriptEngineWorkerApplication {
     }
 
     @Bean
-    public DirectMessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory, IExecutorRegistration executorRegistration, EnvConfig envConfig) {
-        var container = new DirectMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addQueueNames(inputQueueName);
-        container.setMessageListener(messagePollerService);
-        container.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-        container.setShutdownTimeout(0);
-
-        if (executorRegistration.allowConcurrency()) {
-            logger.info(String.format("Enabling concurrency: [preFetchCount: %s, consumers: %s]", envConfig.getPrefetchCount(), envConfig.getConsumers() ));
-            container.setPrefetchCount(envConfig.getPrefetchCount());
-            container.setConsumersPerQueue(envConfig.getConsumers());
-        } else {
-            logger.info("Disabling concurrency: only consuming one message a time (ignoring preFetchCount and consumer settings)");
-            container.setPrefetchCount(0);
-            container.setConsumersPerQueue(1);
-        }
-        return container;
-    }
-
-    @Bean
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);
@@ -148,17 +82,4 @@ public class ScriptEngineWorkerApplication {
         executor.initialize();
         return executor;
     }
-
-    private static void setDefaultProperties(SpringApplication app) {
-        Properties properties = new Properties();
-
-        properties.put("management.metrics.export.prometheus.enabled", "true");
-        properties.put("management.server.port", "9090");
-        properties.put("management.endpoint.prometheus.enabled", "true");
-        properties.put("management.endpoints.web.exposure.include", "health,prometheus");
-        properties.put("management.endpoint.health.probes.enabled", true);
-
-        app.setDefaultProperties(properties);
-    }
-
 }

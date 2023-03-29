@@ -64,7 +64,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecutionInput = ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build();
         var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
@@ -99,7 +100,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecutionInput = ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build();
         var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
@@ -134,7 +136,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecutionInput = new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis());
+        var scriptExecutionInput = ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build();
         var scriptExecution = new ScriptExecution(scriptExecutionInput);
         Assertions.assertNull(scriptExecution.getWorkspace());
 
@@ -174,7 +177,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -214,7 +218,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         myExecutor.execute(scriptExecution);
@@ -244,7 +249,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));
@@ -276,7 +282,8 @@ public class ExternalScriptExecutorTest {
             }
         };
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "myScript\nsecond-line", "myInput", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("myScript\nsecond-line").input("myInput").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         Assertions.assertThrows(RuntimeException.class, () -> myExecutor.execute(scriptExecution));

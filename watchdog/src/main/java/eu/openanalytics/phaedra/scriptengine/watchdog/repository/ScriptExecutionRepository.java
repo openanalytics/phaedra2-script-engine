@@ -20,23 +20,24 @@
  */
 package eu.openanalytics.phaedra.scriptengine.watchdog.repository;
 
-import eu.openanalytics.phaedra.scriptengine.dto.HeartbeatDTO;
-import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
-import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
-import eu.openanalytics.phaedra.scriptengine.watchdog.model.ScriptExecution;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import eu.openanalytics.phaedra.scriptengine.dto.HeartbeatDTO;
+import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.scriptengine.watchdog.config.WatchDogConfig;
+import eu.openanalytics.phaedra.scriptengine.watchdog.model.ScriptExecution;
 
 @Component
 public class ScriptExecutionRepository {
@@ -54,8 +55,8 @@ public class ScriptExecutionRepository {
      */
     public void createScriptExecution(ScriptExecutionInputDTO input, String routingKey) {
         var outputRoutingKey = watchDogConfig.getOutputRoutingKeyPrefix() + input.getResponseTopicSuffix();
-        if (!createSCriptExceution(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey)) {
-            createSCriptExceution(input.getId(), input.getQueueTimestamp(), routingKey, outputRoutingKey);
+        if (!createScriptExceution(input.getId(), 0L, routingKey, outputRoutingKey)) {
+            createScriptExceution(input.getId(), 0L, routingKey, outputRoutingKey);
         }
     }
 
@@ -130,7 +131,7 @@ public class ScriptExecutionRepository {
      * @return whether the record was successfully created/updated. May be false when the record was created while calling this function.
      */
     @Transactional
-    protected boolean createSCriptExceution(String id, long queuetimestmap, String inputRoutingKey, String outputRoutingKey) {
+    protected boolean createScriptExceution(String id, long queuetimestmap, String inputRoutingKey, String outputRoutingKey) {
         var queuedTimestamp = LocalDateTime.ofInstant(Instant.ofEpochMilli(queuetimestmap), ZoneId.systemDefault());
 
         if (!existsWithLock(id)) {

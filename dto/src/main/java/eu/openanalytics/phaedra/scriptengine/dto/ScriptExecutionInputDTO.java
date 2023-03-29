@@ -20,36 +20,24 @@
  */
 package eu.openanalytics.phaedra.scriptengine.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Value;
-import lombok.With;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * POJO holding all information that is part of the request to execute a script.
- */
-@Value
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
 @Builder
-@With
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ScriptExecutionInputDTO {
 
     String id;
     String script;
+    String language;
     String input;
-    String responseTopicSuffix;
-    long queueTimestamp;
-
-    public ScriptExecutionInputDTO(@JsonProperty(value = "id", required = true) String id,
-                                   @JsonProperty(value = "script", required = true) String script,
-                                   @JsonProperty(value = "input", required = true) String input,
-                                   @JsonProperty(value = "responseTopicSuffix", required = true) String responseTopicSuffix,
-                                   @JsonProperty(value = "queueTimestamp", required = true) long queueTimestamp) {
-        this.id = id;
-        this.script = script;
-        this.input = input;
-        this.responseTopicSuffix = responseTopicSuffix;
-        this.queueTimestamp = queueTimestamp;
-    }
 
 }
 
