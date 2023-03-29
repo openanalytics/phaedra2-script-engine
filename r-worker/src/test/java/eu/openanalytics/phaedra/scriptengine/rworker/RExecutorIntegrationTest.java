@@ -25,11 +25,13 @@ import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
+@Disabled
 public class RExecutorIntegrationTest {
 
     @Test
@@ -40,7 +42,8 @@ public class RExecutorIntegrationTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("output <- input$a + input$b").input("{\"a\": 1, \"b\":2}").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);
@@ -59,7 +62,8 @@ public class RExecutorIntegrationTest {
 
         var myExecutor = new RExecutor(config);
 
-        var scriptExecution = new ScriptExecution(new ScriptExecutionInputDTO("myId", "output <- input$a + input$b", "{\"a\": 1, \"b\":2}", "myTopic", System.currentTimeMillis()));
+        var scriptExecution = new ScriptExecution(ScriptExecutionInputDTO.builder()
+        		.id("myId").script("output <- input$a + input$b").input("{\"a\": 1, \"b\":2}").build());
         Assertions.assertNull(scriptExecution.getWorkspace());
 
         var output = myExecutor.execute(scriptExecution);

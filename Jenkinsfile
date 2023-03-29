@@ -12,10 +12,13 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '3'))
     }
 
+<<<<<<< HEAD
     environment {
         REPO_PREFIX = "772435625456.dkr.ecr.eu-west-1.amazonaws.com/openanalytics/"
         ACCOUNTID = "772435625456"
     }
+=======
+>>>>>>> refs/heads/master
     stages {
 
         stage('Load maven cache repository from S3') {
@@ -34,7 +37,9 @@ pipeline {
                     env.GROUP_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.groupId -q -DforceStdout").trim()
                     env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
                     env.VERSION = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    env.REGISTRY = "registry.openanalytics.eu"
                     env.MVN_ARGS = "-Dmaven.repo.local=/home/jenkins/maven-repository --batch-mode"
+                    env.MVN_EXLCUDE_PARENT = ""
                 }
             }
 
@@ -43,201 +48,52 @@ pipeline {
         stage('Build') {
             steps {
                 container('builder') {
-
                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                        sh "mvn -s \$MAVEN_SETTINGS_RSB -U clean install -DskipTests -Ddocker.skip ${env.MVN_ARGS}"
-
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB -U clean install -DskipTests -Ddocker.skip ${env.MVN_ARGS} ${env.MVN_EXLCUDE_PARENT}"
                     }
-
                 }
             }
         }
 
-//         stage('Test') {
-//             steps {
-//                 container('builder') {
-//
-//                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-//
-//                         sh "mvn -s \$MAVEN_SETTINGS_RSB test -Ddocker.skip ${env.MVN_ARGS}"
-//
-//                     }
-//
-//                 }
-//             }
-//         }
+        stage('Test') {
+            steps {
+                container('builder') {
+                    withDockerRegistry([credentialsId: "oa-sa-jenkins-registry", url: "https://registry.openanalytics.eu"]) {
+                		configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                    		sh "mvn -s \$MAVEN_SETTINGS_RSB test ${env.MVN_ARGS} ${env.MVN_EXLCUDE_PARENT}"
+                		}
+    				}
+                }
+            }
+        }
 
         stage("Deploy to Nexus") {
             steps {
                 container('builder') {
-
                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                        sh "mvn -s \$MAVEN_SETTINGS_RSB deploy -DskipTests -Ddocker.skip ${env.MVN_ARGS}"
-
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB deploy -DskipTests -Ddocker.skip ${env.MVN_ARGS} ${env.MVN_EXLCUDE_PARENT}"
                     }
-
                 }
             }
         }
 
-        stage("Docker") {
-            parallel {
-
-                stage('R worker') {
-                    stages {
-                        stage('Prepare environment') {
-                            steps {
-                                dir('r-worker') {
-                                    script {
-                                        env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
-                                        env.REPO = "openanalytics/${env.ARTIFACT_ID}"
-                                    }
-                                }
-                            }
-                        }
-
-                        stage('Login to ECR') {
-                            steps {
-                                dir('r-worker') {
-                                    container('builder') {
-                                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-                                    }
-                                }
-                            }
-                        }
-
-                        stage('Build Docker image') {
-                            steps {
-                                dir('r-worker') {
-                                    container('builder') {
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-
-                                        }
-
-                                    }
-                                }
-
-                            }
-                        }
-
-                        stage('Push to OA registry') {
-                            steps {
-                                dir('r-worker') {
-                                    container('builder') {
-                                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-                                        }
-                                    }
-                                }
-                            }
-                        }
+        stage('Build Docker image') {
+            steps {
+                container('builder') {
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB io.fabric8:docker-maven-plugin:build ${env.MVN_ARGS}"
                     }
                 }
-                stage('JavaStat worker') {
-                    stages {
-                        stage('Prepare environment') {
-                            steps {
-                                dir('java-stat-worker') {
-                                    script {
-                                        env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
-                                        env.REPO = "openanalytics/${env.ARTIFACT_ID}"
-                                    }
-                                }
-                            }
-                        }
+            }
+        }
 
-                        stage('Build Docker image') {
-                            steps {
-                                dir('java-stat-worker') {
-                                    container('builder') {
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-
-                                        }
-
-                                    }
-                                }
-
-                            }
-                        }
-
-                        stage('Push to OA registry') {
-                            steps {
-                                dir('java-stat-worker') {
-                                    container('builder') {
-                                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-                                        }
-                                    }
-                                }
-                            }
-                        }
+        stage('Push to OA registry') {
+            steps {
+                container('builder') {
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                        sh "mvn -s \$MAVEN_SETTINGS_RSB io.fabric8:docker-maven-plugin:push -Ddocker.push.registry=${REGISTRY} ${env.MVN_ARGS}"
                     }
                 }
-                stage('WatchDog') {
-                    stages {
-                        stage('Prepare environment') {
-                            steps {
-                                dir('watchdog') {
-                                    script {
-                                        env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
-                                        env.REPO = "openanalytics/${env.ARTIFACT_ID}"
-                                    }
-                                }
-                            }
-                        }
-
-                        stage('Build Docker image') {
-                            steps {
-                                dir('watchdog') {
-                                    container('builder') {
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:build -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-
-                                        }
-
-                                    }
-                                }
-
-                            }
-                        }
-
-                        stage('Push to OA registry') {
-                            steps {
-                                dir('watchdog') {
-                                    container('builder') {
-                                        sh "aws --region eu-west-1 ecr describe-repositories --repository-names ${env.REPO} || aws --region eu-west-1 ecr create-repository --repository-name ${env.REPO}"
-                                        sh "\$(aws ecr get-login --registry-ids '${env.ACCOUNTID}' --region 'eu-west-1' --no-include-email)"
-
-                                        configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-
-                                            sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.repoPrefix=${env.REPO_PREFIX} ${env.MVN_ARGS}"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
             }
         }
 
@@ -254,10 +110,10 @@ pipeline {
 
     post {
         success {
-            step([$class          : 'JacocoPublisher',
-                  execPattern     : '**/target/jacoco.exec',
-                  classPattern    : '**/target/classes',
-                  sourcePattern   : '**/src/main/java',
+            step([$class: 'JacocoPublisher',
+                  execPattern: '**/target/jacoco.exec',
+                  classPattern: '**/target/classes',
+                  sourcePattern: '**/src/main/java',
                   exclusionPattern: '**/src/test*'
             ])
         }
