@@ -17,10 +17,9 @@
 
     <properties>
         <java.version>16</java.version>
-        <maven.compiler.source>16</maven.compiler.source>
-        <maven.compiler.target>16</maven.compiler.target>
-        <docker.repoPrefix/>
-        <docker.imageName>${project.artifactId}</docker.imageName>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+		<docker.imageName>openanalytics/${project.artifactId}</docker.imageName>
     </properties>
 
     <dependencies>
@@ -59,39 +58,37 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Allows building a Docker image -->
+            
             <plugin>
                 <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.37.0</version>
-                <configuration>
-                    <verbose>true</verbose>
-                    <images>
-                        <image>
-                            <name>${docker.repoPrefix}${docker.imageName}</name>
-                            <build>
-                                <cacheFrom>${docker.repoPrefix}${docker.imageName}</cacheFrom>
-                                <dockerFile>${project.basedir}/Dockerfile</dockerFile>
-                                <tags>
-                                    <tag>${project.version}</tag>
-                                </tags>
-                                <args>
-                                    <JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
-                                </args>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>default</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.37.0</version>
+				<configuration>
+					<images>
+						<image>
+							<name>${docker.imageName}</name>
+							<build>
+								<dockerFile>${project.basedir}/Dockerfile</dockerFile>
+								<tags>
+									<tag>${project.version}</tag>
+								</tags>
+								<args>
+									<JAR_FILE>target/${project.build.finalName}.jar</JAR_FILE>
+								</args>
+							</build>
+						</image>
+					</images>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
             </plugin>
+            
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
