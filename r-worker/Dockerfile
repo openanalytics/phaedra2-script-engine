@@ -1,5 +1,5 @@
 # Generated file: do NOT change
-FROM debian:buster as builder
+FROM registry.openanalytics.eu/proxy/library/debian:buster as builder
 
 RUN mkdir /opt/phaedra2
 ARG JAR_FILE
@@ -10,7 +10,7 @@ RUN apt-get update -y && \
     unzip -p  /opt/phaedra2/phaedra2-scriptengine-worker.jar META-INF/MANIFEST.MF | sed -En 's/Implementation-Version: (.*)\r/\1/gp' > /opt/phaedra2/VERSION
 
 # FINAL IMAGE
-FROM openanalytics/r-base
+FROM registry.openanalytics.eu/proxy/openanalytics/r-base
 RUN apt-get update -y && \
     apt-get install unzip && \
     apt-get install -y --no-install-recommends build-essential cmake
