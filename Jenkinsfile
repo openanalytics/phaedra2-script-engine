@@ -12,13 +12,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '3'))
     }
 
-<<<<<<< HEAD
-    environment {
-        REPO_PREFIX = "772435625456.dkr.ecr.eu-west-1.amazonaws.com/openanalytics/"
-        ACCOUNTID = "772435625456"
-    }
-=======
->>>>>>> refs/heads/master
     stages {
 
         stage('Load maven cache repository from S3') {
