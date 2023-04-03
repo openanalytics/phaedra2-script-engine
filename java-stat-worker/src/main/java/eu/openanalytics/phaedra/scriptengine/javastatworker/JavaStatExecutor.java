@@ -40,27 +40,25 @@ package eu.openanalytics.phaedra.scriptengine.javastatworker;
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
-import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
+
 public class JavaStatExecutor implements IExecutor {
 
     private final ObjectMapper objectMapper;
-
     private final Map<String, StatCalculator> statCalculators = new HashMap<>();
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public JavaStatExecutor(ObjectMapper objectMapper, List<StatCalculator> statCalculators) {
@@ -76,54 +74,53 @@ public class JavaStatExecutor implements IExecutor {
 
     @Override
     public ScriptExecutionOutputDTO execute(ScriptExecutionInputDTO scriptExecutionInput) throws JsonProcessingException {
+    	CalculationInput input = null;
         try {
-            var input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
-
-            var formula = scriptExecutionInput.getScript();
-
-            if (!formula.startsWith("JavaStat::")) {
-                return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid formula: does not start with \"JavaStat::\"");
-            }
-
-            var statName = formula.replace("JavaStat::", "");
-            var calculator = statCalculators.get(statName);
-
-            if (calculator == null) {
-                return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, String.format("Invalid formula: no calculator found for this formula: \"%s\"", statName));
-            }
-
-            logger.info(String.format("Executing ScriptExecutionInput: [id: %s, calculator: %s] ", scriptExecutionInput.getId(), calculator.getName()));
-            var outputBuilder = CalculationOutput.builder();
-
-            try {
-                if (input.isPlateStat()) {
-                    outputBuilder.plateValue(calculator.calculateForPlate(input));
-                }
-                if (input.isWelltypeStat()) {
-                    for (var group : input.getValuesByWelltype().entrySet()) {
-                        var value = calculator.calculateForWelltype(input, group.getKey(), group.getValue());
-                        outputBuilder.addWelltypeValue(group.getKey(), value);
-                    }
-                }
-            } catch (Throwable ex) {
-                return error(scriptExecutionInput, ResponseStatusCode.SCRIPT_ERROR, "Exception during execution of stat");
-            }
-
-            var res = ScriptExecutionOutputDTO.builder()
-                .inputId(scriptExecutionInput.getId())
-                .statusCode(ResponseStatusCode.SUCCESS)
-                .statusMessage("Ok")
-                .exitCode(0)
-                .output(objectMapper.writeValueAsString(outputBuilder.build()));
-
-            logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: SUCCESS] ", scriptExecutionInput.getId(), calculator.getName()));
-            return res.build();
-        } catch (JsonParseException | JsonMappingException ex) {
-            return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid input format");
+            input = objectMapper.readValue(scriptExecutionInput.getInput(), CalculationInput.class);
+        } catch (Exception ex) {
+            return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid input format", ex);
         }
+        
+        var formula = scriptExecutionInput.getScript();
+        if (!formula.startsWith("JavaStat::")) {
+            return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, "Invalid formula: does not start with \"JavaStat::\"", null);
+        }
+
+        var statName = formula.replace("JavaStat::", "");
+        var calculator = statCalculators.get(statName);
+        if (calculator == null) {
+            return error(scriptExecutionInput, ResponseStatusCode.BAD_REQUEST, String.format("Invalid formula: no calculator found for this formula: \"%s\"", statName), null);
+        }
+
+        logger.info(String.format("Executing ScriptExecutionInput: [id: %s, calculator: %s] ", scriptExecutionInput.getId(), calculator.getName()));
+        var outputBuilder = CalculationOutput.builder();
+
+        try {
+            if (input.isPlateStat()) {
+                outputBuilder.plateValue(calculator.calculateForPlate(input));
+            }
+            if (input.isWelltypeStat()) {
+                for (var group : input.getValuesByWelltype().entrySet()) {
+                    var value = calculator.calculateForWelltype(input, group.getKey(), group.getValue());
+                    outputBuilder.addWelltypeValue(group.getKey(), value);
+                }
+            }
+        } catch (Throwable ex) {
+            return error(scriptExecutionInput, ResponseStatusCode.SCRIPT_ERROR, "Exception during execution of stat", ex);
+        }
+
+        var res = ScriptExecutionOutputDTO.builder()
+            .inputId(scriptExecutionInput.getId())
+            .statusCode(ResponseStatusCode.SUCCESS)
+            .statusMessage("Ok")
+            .exitCode(0)
+            .output(objectMapper.writeValueAsString(outputBuilder.build()));
+
+        logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: SUCCESS] ", scriptExecutionInput.getId(), calculator.getName()));
+        return res.build();
     }
 
-    private ScriptExecutionOutputDTO error(ScriptExecutionInputDTO scriptExecutionInput, ResponseStatusCode statusCode, String statusMessage) throws JsonProcessingException {
+    private ScriptExecutionOutputDTO error(ScriptExecutionInputDTO scriptExecutionInput, ResponseStatusCode statusCode, String statusMessage, Throwable cause) throws JsonProcessingException {
         var res = ScriptExecutionOutputDTO.builder()
             .inputId(scriptExecutionInput.getId())
             .statusCode(statusCode)
@@ -132,10 +129,7 @@ public class JavaStatExecutor implements IExecutor {
             .output(objectMapper.writeValueAsString(CalculationOutput.builder().build()))
             .build();
 
-        logger.info(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: %s, statusMessage] ", scriptExecutionInput.getId(), statusCode, statusMessage));
+        logger.warn(String.format("Executed ScriptExecutionInput: [id: %s, calculator: %s, statusCode: %s, statusMessage] ", scriptExecutionInput.getId(), statusCode, statusMessage), cause);
         return res;
-
     }
-
-
 }

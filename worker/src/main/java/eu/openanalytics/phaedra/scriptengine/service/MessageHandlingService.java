@@ -79,12 +79,13 @@ public class MessageHandlingService {
     	try {
     		heartbeatSenderService.sendAndStartHeartbeats(input);
     		
+    		logger.info("Processing script execution request: " + input.getId());
     		ScriptExecutionOutputDTO scriptExecutionOutput = executor.execute(input);
             if (scriptExecutionOutput != null) {
             	kafkaTemplate.send(TOPIC_SCRIPTENGINE, EVENT_SCRIPT_EXECUTION_UPDATE, scriptExecutionOutput);
             }
         } catch (Exception e) {
-            logger.warn("Exception while processing message" + message, e);
+            logger.warn("Exception while processing message " + message, e);
         } finally {
             heartbeatSenderService.stopHeartbeats(input);
         }
