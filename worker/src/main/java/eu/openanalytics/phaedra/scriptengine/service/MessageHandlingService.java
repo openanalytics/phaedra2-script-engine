@@ -28,8 +28,10 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
@@ -61,10 +63,13 @@ public class MessageHandlingService {
         this.heartbeatSenderService = heartbeatSenderService;
     }
 
-    @KafkaListener(topics = TOPIC_SCRIPTENGINE)
-    public void onScriptExecutionRequest(String message, @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key) {
-    	if (!EVENT_REQUEST_SCRIPT_EXECUTION.equalsIgnoreCase(key)) return;
-    	
+    @Bean
+    public RecordFilterStrategy<String, Object> scriptExecutionRequestFilter() {
+        return rec -> !(rec.key().equalsIgnoreCase(EVENT_REQUEST_SCRIPT_EXECUTION));
+    }
+    
+    @KafkaListener(topics = TOPIC_SCRIPTENGINE, filter = "scriptExecutionRequestFilter")
+    public void onScriptExecutionRequest(String message) {
     	ScriptExecutionInputDTO input = null;
     	try {
             input = objectMapper.readValue(message, ScriptExecutionInputDTO.class);
