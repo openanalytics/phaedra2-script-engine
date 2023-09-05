@@ -211,4 +211,6 @@ application.yml
 /worker/phaedra2-scriptengine-worker.iml
 /java-stat-worker/phaedra2-scriptengine-java-stat-worker.iml
 /dto/phaedra2-scriptengine-dto.iml
+
 .idea/
+*.iml
