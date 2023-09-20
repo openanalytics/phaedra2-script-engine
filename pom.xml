@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    
     <parent>
         <groupId>eu.openanalytics.phaedra</groupId>
         <artifactId>phaedra2-parent</artifactId>
@@ -13,15 +14,14 @@
     <artifactId>phaedra2-scriptengine</artifactId>
     <name>phaedra2-scriptengine</name>
 
-    <properties>
-        <java.version>16</java.version>
-    </properties>
-
+	<properties>
+		<docker.skip>true</docker.skip>
+	</properties>
+	
     <modules>
         <module>dto/</module>
         <module>worker/</module>
         <module>r-worker</module>
-        <!--<module>watchdog</module>-->
         <module>java-stat-worker</module>
     </modules>
 
@@ -30,52 +30,6 @@
             <plugin>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
-                <version>1.9.0</version>
-                <configuration>
-                    <header>LICENSE_HEADER</header>
-                    <aggregate>true</aggregate>
-                    <strictCheck>true</strictCheck>
-                    <excludes>
-                        <exclude>*.log</exclude>
-                        <exclude>mvnw.cmd</exclude>
-                        <exclude>mvnw</exclude>
-                        <exclude>**/*.properties</exclude>
-                        <exclude>**/*.yml</exclude>
-                        <exclude>**/*.yaml</exclude>
-                        <exclude>**/*.config</exclude>
-                        <exclude>**/*.xml</exclude>
-                        <exclude>LICENSE</exclude>
-                        <exclude>LICENSE_HEADER</exclude>
-                        <exclude>Dockerfile</exclude>
-                        <exclude>README.md</exclude>
-                        <exclude>**/*.json</exclude>
-                        <exclude>.gitignore</exclude>
-                        <exclude>src/deb/**</exclude>
-                        <exclude>templates/**</exclude>
-                        <exclude>src/main/resources/static/handlebars/node_modules/**</exclude>
-                        <exclude>**/*.sql</exclude>
-                        <exclude>Dockerfile.app</exclude>
-                        <exclude>Dockerfile.db</exclude>
-                        <exclude>Jenkinsfile</exclude>
-                        <exclude>**/*.sh</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>generate-copyright-headers</id>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                    <!--                    <execution>-->
-                    <!--                        <id>check-copyright-headers</id>-->
-                    <!--                        <phase>package</phase>-->
-                    <!--                        <goals>-->
-                    <!--                            <goal>check</goal>-->
-                    <!--                        </goals>-->
-                    <!--                    </execution>-->
-                </executions>
             </plugin>
         </plugins>
     </build>
