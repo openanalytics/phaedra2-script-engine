@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.phaedra.scriptengine.service;
 
-import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.EVENT_REQUEST_SCRIPT_EXECUTION;
 import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.EVENT_SCRIPT_EXECUTION_UPDATE;
 import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.TOPIC_SCRIPTENGINE;
 
@@ -28,10 +27,8 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,12 +57,7 @@ public class MessageHandlingService {
         this.executor = executor;
         this.heartbeatSenderService = heartbeatSenderService;
     }
-
-    @Bean
-    public RecordFilterStrategy<String, Object> scriptExecutionRequestFilter() {
-        return rec -> !(rec.key().equalsIgnoreCase(EVENT_REQUEST_SCRIPT_EXECUTION));
-    }
-    
+  
     @KafkaListener(topics = TOPIC_SCRIPTENGINE, filter = "scriptExecutionRequestFilter")
     public void onScriptExecutionRequest(String message) {
     	ScriptExecutionInputDTO input = null;
