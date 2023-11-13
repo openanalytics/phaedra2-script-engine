@@ -99,6 +99,13 @@ RUN R -e "install.packages('car')"
 RUN R -e "install.packages('drc')"
 RUN R -e "install.packages('ggplot2')"
 
+# Install necessary packages for receptorAbbvie
+RUN R -e "install.packages('minpack.lm')"
+RUN R -e "install.packages('modelr')"
+RUN R -e "install.packages('scales')"
+RUN R -e "install.packages('nleqslv')"
+
+
 # TODO: change this to pull the repositories directly from a repository
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra',repos=NULL, type='source')"
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
