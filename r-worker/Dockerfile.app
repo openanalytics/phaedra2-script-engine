@@ -99,7 +99,9 @@ RUN R -e "install.packages('car')"
 RUN R -e "install.packages('drc')"
 RUN R -e "install.packages('ggplot2')"
 
+# TODO: change this to pull the repositories directly from a repository
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra',repos=NULL, type='source')"
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
 
 WORKDIR /opt/phaedra2
