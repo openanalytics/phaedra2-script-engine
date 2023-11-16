@@ -88,14 +88,17 @@ ADD user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhae
 ADD user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
 ADD user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
 
+RUN mkdir /opt/phaedra2/r_libs
+RUN export R_LIBS=/opt/phaedra2/r_libs
+
 RUN R -e "install.packages('rjson')"
 RUN R -e "install.packages('plyr')"
 RUN R -e "install.packages('ape')"
 RUN R -e "install.packages('reshape2')"
 RUN R -e "install.packages('kSamples')"
 RUN R -e "install.packages('nloptr')"
-RUN R -e "install.packages('lme4')"
-RUN R -e "install.packages('pbkrtest')"
+#RUN R -e "install.packages('lme4')"
+RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.4-7.tar.gz', repo=NULL, type='source')"
 RUN R -e "install.packages('car')"
 RUN R -e "install.packages('drc')"
 RUN R -e "install.packages('ggplot2')"
@@ -108,7 +111,7 @@ RUN R -e "install.packages('nleqslv')"
 
 
 # TODO: change this to pull the repositories directly from a repository
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra',repos=NULL, type='source')"
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra', lib="/opt/phaedra2/user_libs" repos=NULL, type='source')"
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
 
