@@ -84,37 +84,16 @@ ENV PHAEDRA_USER phaedra
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
 
-ADD user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
-ADD user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
-ADD user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
+COPY user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
+COPY user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
+COPY user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
 
 RUN mkdir /opt/phaedra2/r_libs
-RUN export R_LIBS=/opt/phaedra2/r_libs
+RUN chmod a+rwx -R /opt/phaedra2/r_libs
 
-RUN R -e "install.packages('rjson')"
-RUN R -e "install.packages('plyr')"
-RUN R -e "install.packages('ape')"
-RUN R -e "install.packages('reshape2')"
-RUN R -e "install.packages('kSamples')"
-RUN R -e "install.packages('nloptr')"
-#RUN R -e "install.packages('lme4')"
-RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/pbkrtest/pbkrtest_0.4-7.tar.gz', repo=NULL, type='source')"
-RUN R -e "install.packages('car')"
-RUN R -e "install.packages('drc')"
-RUN R -e "install.packages('ggplot2')"
+COPY install_packages.R /opt/phaedra2/install_packages.R
 
-# Install necessary packages for receptorAbbvie
-RUN R -e "install.packages('minpack.lm')"
-RUN R -e "install.packages('modelr')"
-RUN R -e "install.packages('scales')"
-RUN R -e "install.packages('nleqslv')"
-
-
-# TODO: change this to pull the repositories directly from a repository
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra', repos=NULL, type='source')"
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
-
+RUN Rscript /opt/phaedra2/install_packages.R
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
