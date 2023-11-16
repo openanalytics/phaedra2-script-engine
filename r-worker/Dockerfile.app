@@ -85,6 +85,7 @@ RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
 
 ADD user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
+ADD user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
 ADD user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
 
 RUN R -e "install.packages('rjson')"
