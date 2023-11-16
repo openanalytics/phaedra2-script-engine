@@ -111,9 +111,10 @@ RUN R -e "install.packages('nleqslv')"
 
 
 # TODO: change this to pull the repositories directly from a repository
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra', lib="/opt/phaedra2/user_libs" repos=NULL, type='source')"
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
 RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra', repos=NULL, type='source')"
+RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptorAbbVie',repos=NULL, type='source')"
+
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
