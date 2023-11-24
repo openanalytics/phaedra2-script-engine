@@ -21,7 +21,8 @@ RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA
 COPY --from=builder /build/jdk-17 /opt/jdk-17
 
 ENV JAVA_HOME=/opt/jdk-17
-ENV PATH=${PATH}:${JAVA_HOME}/bin
+ENV PATH $JAVA_HOME/bin:$PATH
+ENV LANG C.UTF-8
 
 ARG JAR_FILE
 ADD $JAR_FILE /opt/phaedra2/phaedra2-scriptengine-worker.jar
