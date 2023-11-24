@@ -84,23 +84,16 @@ ENV PHAEDRA_USER phaedra
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
 
-ADD user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
-ADD user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
+COPY user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
+COPY user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
+COPY user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
 
-RUN R -e "install.packages('rjson')"
-RUN R -e "install.packages('plyr')"
-RUN R -e "install.packages('ape')"
-RUN R -e "install.packages('reshape2')"
-RUN R -e "install.packages('kSamples')"
-RUN R -e "install.packages('nloptr')"
-RUN R -e "install.packages('lme4')"
-RUN R -e "install.packages('pbkrtest')"
-RUN R -e "install.packages('car')"
-RUN R -e "install.packages('drc')"
-RUN R -e "install.packages('ggplot2')"
+RUN mkdir /opt/phaedra2/r_libs
+RUN chmod a+rwx -R /opt/phaedra2/r_libs
 
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/glpgPhaedra',repos=NULL, type='source')"
-RUN R -e "install.packages('/opt/phaedra2/user_package_library/receptor2',repos=NULL, type='source')"
+COPY install_packages.R /opt/phaedra2/install_packages.R
+
+RUN Rscript /opt/phaedra2/install_packages.R
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
