@@ -10,7 +10,7 @@ RUN apt-get update -y && \
     unzip -p  /opt/phaedra2/phaedra2-scriptengine-worker.jar META-INF/MANIFEST.MF | sed -En 's/Implementation-Version: (.*)\r/\1/gp' > /opt/phaedra2/VERSION
 
 # FINAL IMAGE
-FROM registry.openanalytics.eu/proxy/openanalytics/r-base
+FROM registry.openanalytics.eu/openanalytics/phaedra-r-base:latest
 RUN apt-get update -y && \
     apt-get install unzip && \
     apt-get install -y --no-install-recommends build-essential cmake
@@ -77,23 +77,12 @@ RUN set -eux; \
 	javac --version; \
 	java --version
 
-LABEL maintainer="Tobia De Koninck <tdekoninck@openanalytics.eu>"
+LABEL maintainer="Saša Berberović <sasa.berberovic@openanalytics.eu>"
 
 ENV PHAEDRA_USER phaedra
 
 RUN useradd -c 'phaedra user' -m -d /home/$PHAEDRA_USER -s /bin/nologin $PHAEDRA_USER
 COPY --from=builder --chown=$PHAEDRA_USER:$PHAEDRA_USER /opt/phaedra2 /opt/phaedra2
-
-COPY user_package_library/glpgPhaedra /opt/phaedra2/user_package_library/glpgPhaedra
-COPY user_package_library/receptorAbbVie /opt/phaedra2/user_package_library/receptorAbbVie
-COPY user_package_library/receptor2 /opt/phaedra2/user_package_library/receptor2
-
-RUN mkdir /opt/phaedra2/r_libs
-RUN chmod a+rwx -R /opt/phaedra2/r_libs
-
-COPY install_packages.R /opt/phaedra2/install_packages.R
-
-RUN Rscript /opt/phaedra2/install_packages.R
 
 WORKDIR /opt/phaedra2
 USER $PHAEDRA_USER
