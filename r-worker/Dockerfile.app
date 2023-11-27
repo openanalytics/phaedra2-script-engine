@@ -12,9 +12,7 @@ RUN apt-get update -y && \
 # FINAL IMAGE
 FROM registry.openanalytics.eu/openanalytics/phaedra-r-base
 RUN apt-get update -y && \
-    apt-get install unzip && \
-    apt-get install -y wget && \
-    apt-get install -y --no-install-recommends build-essential cmake
+    apt-get install -y unzip wget build-essential cmake
 
 ENV JAVA_HOME /usr/local/openjdk-18
 ENV PATH $JAVA_HOME/bin:$PATH
