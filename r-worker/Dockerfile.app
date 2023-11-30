@@ -1,9 +1,10 @@
 # FINAL IMAGE
 FROM registry.openanalytics.eu/openanalytics/phaedra-r-base
 
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y openjdk-17-jdk curl && \
-    apt-get clean
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y openjdk-17-jdk curl
+RUN apt-get clean
 
 # Set environment variables for JDK 17
 ENV JAVA_HOME=/usr/lib/jvm/java-18-openjdk-amd64
