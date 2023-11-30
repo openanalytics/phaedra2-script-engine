@@ -1,6 +1,7 @@
 # FINAL IMAGE
 FROM registry.openanalytics.eu/openanalytics/phaedra-r-base:latest
 
+RUN apt-get update && apt-get install -y apt-transport-https
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y openjdk-17-jdk curl && \
@@ -27,4 +28,4 @@ USER $PHAEDRA_USER
 
 # ADD application.yml /opt/phaedra2/application.yml
 
-CMD ["java", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "-jar", "/opt/phaedra2/phaedra2-scriptengine-worker.jar"]
+CMD ["java", "-jar", "/opt/phaedra2/phaedra2-scriptengine-worker.jar"]
