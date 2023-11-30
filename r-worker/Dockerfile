@@ -1,9 +1,8 @@
 # FINAL IMAGE
 FROM registry.openanalytics.eu/openanalytics/phaedra-r-base:latest
 
-RUN apt-get update && apt-get install -y apt-transport-https
-RUN apt-get update && \
-    apt-get upgrade -y && \
+RUN apt-get -y update && apt-get install -y apt-transport-https
+RUN apt-get -y update && \
     apt-get install -y openjdk-17-jdk curl && \
     apt-get clean
 
