@@ -29,6 +29,8 @@ pipeline {
                     env.GROUP_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.groupId -q -DforceStdout").trim()
                     env.ARTIFACT_ID = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout").trim()
                     env.VERSION = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout").trim()
+                    env.IMAGE = sh(returnStdout: true, script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=docker.imageName -q -DforceStdout").trim()
+                    env.NS = "openanalytics"
                     env.REGISTRY = "registry.openanalytics.eu"
                     env.MVN_ARGS = "-Dmaven.repo.local=/home/jenkins/maven-repository --batch-mode"
                     env.MVN_EXLCUDE_PARENT = ""
@@ -69,27 +71,17 @@ pipeline {
             }
         }
 
-        stage('Build Docker image') {
+        stage('Build Docker image and push to OA registry') {
             steps {
-                container('builder') {
-                    withDockerRegistry([credentialsId: "oa-sa-jenkins-registry", url: "https://registry.openanalytics.eu"]) {
-                    	configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-                        	sh "mvn -X -s \$MAVEN_SETTINGS_RSB docker:build ${env.MVN_ARGS}"
-                      	}
-					}
-                }
-            }
-        }
-
-        stage('Push to OA registry') {
-            steps {
-                container('builder') {
-					withDockerRegistry([credentialsId: "oa-sa-jenkins-registry", url: "https://registry.openanalytics.eu"]) {
-	                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
-    	                    sh "mvn -s \$MAVEN_SETTINGS_RSB docker:push -Ddocker.push.registry=${REGISTRY} ${env.MVN_ARGS}"
-        	            }
-            		}
-				}
+                sh """
+                /kaniko/executor \
+                    -v info \
+                    --context ${env.WORKSPACE} \
+                    --cache=${params.NOCACHE ? 'false' : 'true'} \
+                    --cleanup \
+                    --destination=${env.REGISTRY}/${env.NS}/${env.IMAGE}:${env.R_VERSION} \
+                    --destination=${env.REGISTRY}/${env.NS}/${env.IMAGE}:latest
+                """
             }
         }
 
