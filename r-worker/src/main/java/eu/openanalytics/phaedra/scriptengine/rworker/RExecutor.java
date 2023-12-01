@@ -62,7 +62,7 @@ public class RExecutor extends ExternalProcessExecutor {
     protected int executeScript(ScriptExecution scriptExecution) throws WorkerException, InterruptedException {
         ProcessBuilder builder = new ProcessBuilder();
 
-        builder.command("/usr/bin/Rscript", "--vanilla", "script.R");
+        builder.command("Rscript", "--vanilla", "script.R");
 
         builder.directory(scriptExecution.getWorkspace().toFile());
 
