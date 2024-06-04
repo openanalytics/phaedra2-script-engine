@@ -36,6 +36,7 @@ public class ScriptExecutionInputDTO {
 
     String id;
     String script;
+    String category;
     String language;
     String input;
 
