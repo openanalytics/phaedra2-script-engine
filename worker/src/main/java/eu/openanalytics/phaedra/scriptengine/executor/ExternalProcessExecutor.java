@@ -60,6 +60,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
             setupEnv(scriptExecution);
 
             int exitCode = executeScript(scriptExecution);
+            logger.info("Execute a Rscript --verbose script.R with exitCode %d", exitCode);
 
             if (ShutdownService.isShuttingDown()) {
                 logger.warn("Script marked as WORKER_INTERNAL_ERROR since worker is shutting down!");
@@ -67,8 +68,18 @@ public abstract class ExternalProcessExecutor implements IExecutor {
             }
 
             if (!checkOutput(scriptExecution)) {
-                return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(),
-                    "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output file!", exitCode);
+                if (!"CURVE_FITTING".equalsIgnoreCase(
+                    scriptExecution.getScriptExecutionInput().getCategory())) {
+                    return new ScriptExecutionOutputDTO(
+                        scriptExecution.getScriptExecutionInput().getId(),
+                        "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output file!",
+                        exitCode);
+                } else {
+                    return new ScriptExecutionOutputDTO(
+                        scriptExecution.getScriptExecutionInput().getId(),
+                        "", ResponseStatusCode.SUCCESS, "A curve could not be fitted!",
+                        exitCode);
+                }
             }
 
             String output = readOutput(scriptExecution);
