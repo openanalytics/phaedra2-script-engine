@@ -1,58 +1,60 @@
 #!/bin/bash
-#
-# Phaedra II
-#
-# Copyright (C) 2016-2023 Open Analytics
-#
-# ===========================================================================
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the Apache License as published by
-# The Apache Software Foundation, either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# Apache License for more details.
-#
-# You should have received a copy of the Apache License
-# along with this program.  If not, see <http://www.apache.org/licenses/>
-#
 
-# Enable the feature to stop script if any command fails
+# Stop script execution if any command fails
 set -e
 
-# fetch current version
+parent_id=`mvn -q -Dexec.executable=echo -Dexec.args='${project.parent.artifactId}' --non-recursive exec:exec`
+
+# --------------------------------------------------------------
+# Step 1: determine current and release version numbers
+# --------------------------------------------------------------
+
 current_version=`mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec`
-echo "This is current_version: $current_version"
-
-# Remove -SNAPSHOT from version
 release_version=${current_version/-SNAPSHOT/}
-echo "Release version is $release_version"
+echo "The current version is: $current_version"
+echo "The release version is: $release_version"
 
-# Set release version
+# --------------------------------------------------------------
+# Step 2: modify version numbers in the POM files
+# --------------------------------------------------------------
+
 mvn versions:set -DnewVersion="$release_version"
-# Update child module's to parent release version
+mvn versions:update-properties -Dincludes=eu.openanalytics.phaedra -U
 mvn versions:update-child-modules
-# Update parent to latest release version
-mvn versions:update-parent -U
 
-## Commit and push updated pom file
-git add pom.xml
-git add dto/pom.xml
-git add java-stat-worker/pom.xml
-git add r-worker/pom.xml
-git add worker/pom.xml
-git commit -m "update:d set version to $release_version"
-git push
+if [ "$parent_id" = "phaedra2-parent"]; then
+  mvn versions:update-parent -U
+fi
 
-# Use got flow maven plugin to release the project
-mvn -B -DskipTestProject=true gitflow:release-start gitflow:release-finish
+# Commit updated pom files
+git add pom.xml */*pom.xml
+git commit -m "Updated version to $release_version"
 
-# Update parent to latest snapshot version
-mvn versions:update-parent -DallowSnapshots=true -U
+# --------------------------------------------------------------
+# Step 3: gitflow release
+# --------------------------------------------------------------
+
+mvn -B -DskipTestProject=true -DpushRemote=false gitflow:release-start gitflow:release-finish
+
+# --------------------------------------------------------------
+# Step 4: modify version numbers in the POM files (for the next snapshot)
+# --------------------------------------------------------------
+
+# Note: the main pom version has already been modified by gitflow
 mvn versions:update-child-modules -DallowSnapshots=true
+mvn versions:update-properties -DallowSnapshots=true -Dincludes=eu.openanalytics.phaedra -U
 
-# Clean up, remove pom.xml.versionsBackup files created by mvn versions:set
+if [ "$parent_id" = "phaedra2-parent"]; then
+  mvn versions:update-parent -DallowSnapshots=true -U
+fi
+
+# Commit updated pom files
+git add pom.xml */*pom.xml
+git commit -m "Updated version to the next development snapshot"
+
+# --------------------------------------------------------------
+# Step 5: push all branches and tags, cleanup
+# --------------------------------------------------------------
+
+#git push origin develop master --tags
 find . -name "pom.xml.versionsBackup" -type f | xargs rm
