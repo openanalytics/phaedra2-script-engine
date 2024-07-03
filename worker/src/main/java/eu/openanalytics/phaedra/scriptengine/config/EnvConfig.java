@@ -23,7 +23,7 @@ package eu.openanalytics.phaedra.scriptengine.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * Contains all configuration related to the Environment of this worker.

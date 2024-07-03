@@ -20,10 +20,11 @@
  */
 package eu.openanalytics.phaedra.scriptengine.config;
 
+import java.io.File;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import javax.annotation.PostConstruct;
-import java.io.File;
+import jakarta.annotation.PostConstruct;
 
 @ConfigurationProperties(prefix = "phaedra2.script-engine-worker")
 public class ExternalProcessConfig {
