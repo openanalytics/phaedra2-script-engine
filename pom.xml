@@ -22,7 +22,6 @@
         <module>dto/</module>
         <module>worker/</module>
         <module>r-worker</module>
-        <module>java-stat-worker</module>
     </modules>
 
     <build>
