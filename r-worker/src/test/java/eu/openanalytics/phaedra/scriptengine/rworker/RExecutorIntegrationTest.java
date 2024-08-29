@@ -51,7 +51,6 @@ public class RExecutorIntegrationTest {
         Assertions.assertEquals("{\"output\":3}\n", output.getOutput());
         Assertions.assertEquals("Ok", output.getStatusMessage());
         Assertions.assertEquals(ResponseStatusCode.SUCCESS, output.getStatusCode());
-        Assertions.assertEquals(0, output.getExitCode());
     }
 
     @Test
@@ -71,7 +70,6 @@ public class RExecutorIntegrationTest {
         Assertions.assertEquals("{\"output\":3}\n", output.getOutput());
         Assertions.assertEquals("Ok", output.getStatusMessage());
         Assertions.assertEquals(ResponseStatusCode.SUCCESS, output.getStatusCode());
-        Assertions.assertEquals(0, output.getExitCode());
 
         Assertions.assertEquals("{\"a\": 1, \"b\":2}", Files.readString(scriptExecution.getWorkspace().resolve("input.json")));
         Assertions.assertEquals(

@@ -38,6 +38,5 @@ public class ScriptExecutionOutputDTO {
     String output;
     ResponseStatusCode statusCode;
     String statusMessage;
-    Integer exitCode;
 
 }
