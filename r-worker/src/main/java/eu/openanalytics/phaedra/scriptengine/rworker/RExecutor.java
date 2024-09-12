@@ -37,7 +37,7 @@ public class RExecutor extends ExternalProcessExecutor {
       "library(jsonlite)\n"
 			+ "input <- fromJSON(\"input.json\")\n"
 			+ "%s\n"
-      + "json_obj <- toJSON(list(output = output), pretty = TRUE)\n"
+      + "json_obj <- toJSON(list(output = output), pretty = TRUE, auto_unbox = TRUE)\n"
       + "writeLines(json_obj, \"output.json\")\n";
 
     public RExecutor(ExternalProcessConfig config) {
