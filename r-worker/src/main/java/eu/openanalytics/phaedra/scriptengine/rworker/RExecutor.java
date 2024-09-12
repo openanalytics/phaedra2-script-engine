@@ -34,12 +34,12 @@ import eu.openanalytics.phaedra.scriptengine.util.ProcessUtils;
 public class RExecutor extends ExternalProcessExecutor {
 
 	private static final String SCRIPT_WRAPPER =
-			"input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n"
+      "library(jsonlite)\n"
+			+ "input <- fromJSON(\"input.json\")\n"
 			+ "%s\n"
-            + "fh <- file(\"output.json\")\n"
-            + "writeLines(rjson::toJSON(list(output = output)), fh)\n"
-            + "close(fh)\n";
-	
+      + "json_obj <- toJSON(list(output = output), pretty = TRUE)\n"
+      + "writeLines(json_obj, \"output.json\")\n";
+
     public RExecutor(ExternalProcessConfig config) {
         super(config);
     }
