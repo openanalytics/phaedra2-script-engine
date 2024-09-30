@@ -76,7 +76,7 @@ public class ChaosExecutor implements IExecutor {
         if (number < exceptionProbability) {
             // produce an internal error
             logger.warn("ChaosExecutor produced an error for ScriptExecution [{}]", scriptExecution.getId());
-            return new ScriptExecutionOutputDTO(scriptExecution.getId(), "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "[CHAOS] internal error created", 0);
+            return new ScriptExecutionOutputDTO(scriptExecution.getId(), "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "[CHAOS] internal error created");
         } else if (number < (exceptionProbability + ignoreProbability)) {
             // ignore the message. It was acked so the WatchDog should create a failure for it.
             logger.warn("ChaosExecutor ignored a ScriptExecution [{}]", scriptExecution.getId());

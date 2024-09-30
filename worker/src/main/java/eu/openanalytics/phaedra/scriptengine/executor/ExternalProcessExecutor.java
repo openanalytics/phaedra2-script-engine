@@ -20,21 +20,22 @@
  */
 package eu.openanalytics.phaedra.scriptengine.executor;
 
-import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
-import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
-import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
-import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
-import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import eu.openanalytics.phaedra.scriptengine.service.ShutdownService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.FileSystemUtils;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.FileSystemUtils;
+
+import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
+import eu.openanalytics.phaedra.scriptengine.dto.ResponseStatusCode;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
+import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
+import eu.openanalytics.phaedra.scriptengine.exception.ScriptExecutionException;
+import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
+import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
 
 /**
  * Abstract executor that contains the global logic for executing a script using an external process.
@@ -56,41 +57,31 @@ public abstract class ExternalProcessExecutor implements IExecutor {
     }
 
     public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
+    	String inputId = scriptExecution.getScriptExecutionInput().getId();
+    	
         try {
             setupEnv(scriptExecution);
+            
+            executeScript(scriptExecution);
 
-            int exitCode = executeScript(scriptExecution);
-            logger.info("Execute a Rscript --verbose script.R with exitCode %d", exitCode);
-
-            if (ShutdownService.isShuttingDown()) {
-                logger.warn("Script marked as WORKER_INTERNAL_ERROR since worker is shutting down!");
-                return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(), "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "Worker shutting down!", exitCode);
+            if (checkOutput(scriptExecution)) {
+            	String output = readOutput(scriptExecution);
+            	return new ScriptExecutionOutputDTO(inputId, output, ResponseStatusCode.SUCCESS, "Ok");
+            } else {
+            	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output");
             }
-
-            if (!checkOutput(scriptExecution)) {
-                if (!"CURVE_FITTING".equalsIgnoreCase(
-                    scriptExecution.getScriptExecutionInput().getCategory())) {
-                    return new ScriptExecutionOutputDTO(
-                        scriptExecution.getScriptExecutionInput().getId(),
-                        "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output file!",
-                        exitCode);
-                } else {
-                    return new ScriptExecutionOutputDTO(
-                        scriptExecution.getScriptExecutionInput().getId(),
-                        "", ResponseStatusCode.SUCCESS, "A curve could not be fitted!",
-                        exitCode);
-                }
-            }
-
-            String output = readOutput(scriptExecution);
-
-            return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(),
-                output, ResponseStatusCode.SUCCESS, "Ok", exitCode);
-
+        } catch (ScriptExecutionException e) {
+        	logger.debug(String.format("Script (ID: %s) execution error", inputId), e);
+        	
+        	//TODO Curve fit failures should be handled on the CalculationService side instead of masked as Success output
+        	if ("CURVE_FITTING".equalsIgnoreCase(scriptExecution.getScriptExecutionInput().getCategory())) {
+        		return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SUCCESS, "A curve could not be fitted");	
+        	}
+        	
+        	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, e.getMessage());
         } catch (WorkerException e) {
-            e.printStackTrace();
-            return new ScriptExecutionOutputDTO(scriptExecution.getScriptExecutionInput().getId(),
-                "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An error occurred in the worker while processing the script.", 0);
+        	logger.error("Worker encountered an internal error", e);
+            return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.WORKER_INTERNAL_ERROR, "An internal error occurred in the worker while processing the script");
         } finally {
             if (config.getCleanWorkspace()) {
                 cleanWorkspace(scriptExecution);
@@ -152,11 +143,11 @@ public abstract class ExternalProcessExecutor implements IExecutor {
      * Executes the script.
      *
      * @param scriptExecution the script being executed.
-     * @return exit code of the script
+     * @throws ScriptExecutionException when the script encounters an execution exception
      * @throws WorkerException      indicates an exception in the Java code (not the script)
      * @throws InterruptedException when the thread is interrupted when waiting for the script to finish.
      */
-    protected abstract int executeScript(ScriptExecution scriptExecution) throws WorkerException, InterruptedException;
+    protected abstract void executeScript(ScriptExecution scriptExecution) throws ScriptExecutionException, WorkerException, InterruptedException;
 
     protected Boolean checkOutput(ScriptExecution scriptExecution) {
         return Files.exists(scriptExecution.getWorkspace().resolve("output.json"));

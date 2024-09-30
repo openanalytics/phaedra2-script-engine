@@ -21,19 +21,24 @@
 package eu.openanalytics.phaedra.scriptengine.rworker;
 
 import eu.openanalytics.phaedra.scriptengine.config.ExternalProcessConfig;
+import eu.openanalytics.phaedra.scriptengine.exception.ScriptExecutionException;
 import eu.openanalytics.phaedra.scriptengine.exception.WorkerException;
 import eu.openanalytics.phaedra.scriptengine.executor.ExternalProcessExecutor;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
 import eu.openanalytics.phaedra.scriptengine.model.runtime.ScriptExecution;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
+import eu.openanalytics.phaedra.scriptengine.util.ProcessUtils;
 
 /**
  * Implemention of {@link IExecutor} that can execute R scripts.
  */
-@Slf4j
 public class RExecutor extends ExternalProcessExecutor {
+
+	private static final String SCRIPT_WRAPPER =
+      "library(jsonlite)\n"
+			+ "input <- fromJSON(\"input.json\")\n"
+			+ "%s\n"
+      + "json_obj <- toJSON(list(output = output), pretty = TRUE, auto_unbox = TRUE)\n"
+      + "writeLines(json_obj, \"output.json\")\n";
 
     public RExecutor(ExternalProcessConfig config) {
         super(config);
@@ -41,17 +46,7 @@ public class RExecutor extends ExternalProcessExecutor {
 
     @Override
     protected String getFullScript(ScriptExecution scriptExecution) {
-        String fullScript = "fh <- file(\"input.json\")\n" +
-            "input <- rjson::fromJSON(file=\"input.json\", simplify=TRUE)\n" +
-            "close(fh)\n" +
-            scriptExecution.getScriptExecutionInput().getScript() + "\n" +
-            "fh <- file(\"output.json\")\n" +
-            "writeLines(rjson::toJSON(list(output = output)), fh)\n" +
-            "close(fh)\n";
-        log.info("Full script: " + fullScript);
-
-        return fullScript;
-
+        return String.format(SCRIPT_WRAPPER, scriptExecution.getScriptExecutionInput().getScript());
     }
 
     @Override
@@ -59,20 +54,15 @@ public class RExecutor extends ExternalProcessExecutor {
         return "script.R";
     }
 
-    protected int executeScript(ScriptExecution scriptExecution) throws WorkerException, InterruptedException {
-        ProcessBuilder builder = new ProcessBuilder();
-
-        builder.command("Rscript", "--vanilla", "script.R");
-
-        builder.directory(scriptExecution.getWorkspace().toFile());
-
-        try {
-            Process process = builder.start();
-            return process.waitFor();
-        } catch (IOException e) {
-            throw new WorkerException("Internal error during execution of the script", e);
-        }
-
+    @Override
+    protected void executeScript(ScriptExecution scriptExecution) throws ScriptExecutionException, WorkerException, InterruptedException {
+    	String[] cmd = new String[] { "Rscript", "--vanilla", "script.R" };
+    	String workingDir = scriptExecution.getWorkspace().toString();
+    	try {
+    		ProcessUtils.execute(cmd, workingDir, null, true, true);
+    	} catch (RuntimeException e) {
+    		throw new ScriptExecutionException(e.getMessage());
+    	}
     }
 
 }
