@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
 
     <artifactId>phaedra2-scriptengine</artifactId>
-    <name>phaedra2-scriptengine</name>
+    <name>Phaedra2 Script Engine</name>
     <version>2.4.0-SNAPSHOT</version>
 
 	<properties>
