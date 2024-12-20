@@ -20,9 +20,6 @@
  */
 package eu.openanalytics.phaedra.scriptengine.service;
 
-import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.EVENT_SCRIPT_EXECUTION_UPDATE;
-import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.TOPIC_SCRIPTENGINE;
-
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -34,6 +31,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
+import eu.openanalytics.phaedra.scriptengine.config.KafkaConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionOutputDTO;
 import eu.openanalytics.phaedra.scriptengine.executor.IExecutor;
@@ -58,7 +56,7 @@ public class MessageHandlingService {
         this.heartbeatSenderService = heartbeatSenderService;
     }
   
-    @KafkaListener(topics = TOPIC_SCRIPTENGINE, filter = "scriptExecutionRequestFilter")
+    @KafkaListener(topics = KafkaConfig.TOPIC_SCRIPTENGINE_REQUESTS)
     public void onScriptExecutionRequest(String message) {
     	ScriptExecutionInputDTO input = null;
     	try {
@@ -77,7 +75,7 @@ public class MessageHandlingService {
     		logger.info("Processing script execution request: " + input.getId());
     		ScriptExecutionOutputDTO scriptExecutionOutput = executor.execute(input);
             if (scriptExecutionOutput != null) {
-            	kafkaTemplate.send(TOPIC_SCRIPTENGINE, EVENT_SCRIPT_EXECUTION_UPDATE, scriptExecutionOutput);
+            	kafkaTemplate.send(KafkaConfig.TOPIC_SCRIPTENGINE_UPDATES, null, scriptExecutionOutput);
             }
         } catch (Exception e) {
             logger.warn("Exception while processing message " + message, e);

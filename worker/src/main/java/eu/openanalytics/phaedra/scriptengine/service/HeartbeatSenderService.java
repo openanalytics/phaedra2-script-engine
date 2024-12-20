@@ -20,22 +20,18 @@
  */
 package eu.openanalytics.phaedra.scriptengine.service;
 
-import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.EVENT_SCRIPT_EXECUTION_HEARTBEAT;
-import static eu.openanalytics.phaedra.scriptengine.config.KafkaConfig.TOPIC_SCRIPTENGINE;
-
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import eu.openanalytics.phaedra.scriptengine.config.EnvConfig;
+import eu.openanalytics.phaedra.scriptengine.config.KafkaConfig;
 import eu.openanalytics.phaedra.scriptengine.dto.HeartbeatDTO;
 import eu.openanalytics.phaedra.scriptengine.dto.ScriptExecutionInputDTO;
 
@@ -44,7 +40,6 @@ public class HeartbeatSenderService {
 
     private final Set<String> executionsInProgress = ConcurrentHashMap.newKeySet();
 	private final KafkaTemplate<String, Object> kafkaTemplate;
-	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
     public HeartbeatSenderService(KafkaTemplate<String, Object> kafkaTemplate, EnvConfig envConfig) {
     	this.kafkaTemplate = kafkaTemplate;
@@ -76,8 +71,7 @@ public class HeartbeatSenderService {
 
     private void sendHeartbeat(String id) throws JsonProcessingException {
     	HeartbeatDTO heartbeat = HeartbeatDTO.builder().scriptExecutionId(id).build();
-    	kafkaTemplate.send(TOPIC_SCRIPTENGINE, EVENT_SCRIPT_EXECUTION_HEARTBEAT, heartbeat);
-        logger.info("Sent heartbeat for {}", id);
+    	kafkaTemplate.send(KafkaConfig.TOPIC_SCRIPTENGINE_HEARTBEAT, null, heartbeat);
     }
 
 }
