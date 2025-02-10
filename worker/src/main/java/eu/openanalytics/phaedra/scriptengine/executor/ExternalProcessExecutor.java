@@ -56,8 +56,7 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         return execute(new ScriptExecution(scriptExecutionInput));
     }
 
-    public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution)
-        throws InterruptedException {
+    public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
     	String inputId = scriptExecution.getScriptExecutionInput().getId();
 
         try {
@@ -65,24 +64,19 @@ public abstract class ExternalProcessExecutor implements IExecutor {
 
             executeScript(scriptExecution);
 
-//            if (checkOutput(scriptExecution)) {
-//            	String output = readOutput(scriptExecution);
-//            	return new ScriptExecutionOutputDTO(inputId, output, ResponseStatusCode.SUCCESS, "Ok");
-//            } else {
-//            	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output");
-//            }
+            if (checkOutput(scriptExecution)) {
+            	String output = readOutput(scriptExecution);
+            	return new ScriptExecutionOutputDTO(inputId, output, ResponseStatusCode.SUCCESS, "Ok");
+            } else {
+            	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output");
+            }
         } catch (ScriptExecutionException e) {
         	logger.debug(String.format("Script (ID: %s) execution error", inputId), e);
 
-//        	//TODO Curve fit failures should be handled on the CalculationService side instead of masked as Success output
-//        	if ("CURVE_FITTING".equalsIgnoreCase(scriptExecution.getScriptExecutionInput().getCategory())) {
-//              if (checkOutput(scriptExecution)) {
-//                  String output = readOutput(scriptExecution);
-//                  return new ScriptExecutionOutputDTO(inputId, output, ResponseStatusCode.SUCCESS, "Ok");
-//              } else {
-//                  return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output");
-//              }
-//        	}
+        	//TODO Curve fit failures should be handled on the CalculationService side instead of masked as Success output
+        	if ("CURVE_FITTING".equalsIgnoreCase(scriptExecution.getScriptExecutionInput().getCategory())) {
+        		return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SUCCESS, "A curve could not be fitted");
+        	}
 
         	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, e.getMessage());
         } catch (WorkerException e) {
@@ -91,13 +85,6 @@ public abstract class ExternalProcessExecutor implements IExecutor {
         } finally {
             if (config.getCleanWorkspace()) {
                 cleanWorkspace(scriptExecution);
-            }
-
-            if (checkOutput(scriptExecution)) {
-            	String output = readOutput(scriptExecution);
-            	return new ScriptExecutionOutputDTO(inputId, output, ResponseStatusCode.SUCCESS, "Ok");
-            } else {
-            	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, "Script did not create output");
             }
         }
     }
@@ -172,15 +159,11 @@ public abstract class ExternalProcessExecutor implements IExecutor {
      * @param scriptExecution the script being executed
      * @throws WorkerException indicates an exception in the Java code (not the script)
      */
-    protected String readOutput(ScriptExecution scriptExecution) {
+    protected String readOutput(ScriptExecution scriptExecution) throws WorkerException {
         try {
-            if (checkOutput(scriptExecution))
-                return Files.readString(scriptExecution.getWorkspace().resolve("output.json"));
-            else
-                return "No output.json was created!!";
+            return Files.readString(scriptExecution.getWorkspace().resolve("output.json"));
         } catch (IOException e) {
-//            throw new WorkerException("Cannot read output file", e);
-            return null;
+            throw new WorkerException("Cannot read output file", e);
         }
     }
 
