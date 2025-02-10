@@ -59,7 +59,7 @@ public class RExecutor extends ExternalProcessExecutor {
     	String[] cmd = new String[] { "Rscript", "--vanilla", "script.R" };
     	String workingDir = scriptExecution.getWorkspace().toString();
     	try {
-    		ProcessUtils.execute(cmd, workingDir, null, true, true);
+    		ProcessUtils.execute(cmd, workingDir, null, false, true);
     	} catch (RuntimeException e) {
     		throw new ScriptExecutionException(e.getMessage());
     	}
