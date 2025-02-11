@@ -58,10 +58,10 @@ public abstract class ExternalProcessExecutor implements IExecutor {
 
     public ScriptExecutionOutputDTO execute(ScriptExecution scriptExecution) throws InterruptedException {
     	String inputId = scriptExecution.getScriptExecutionInput().getId();
-    	
+
         try {
             setupEnv(scriptExecution);
-            
+
             executeScript(scriptExecution);
 
             if (checkOutput(scriptExecution)) {
@@ -72,12 +72,12 @@ public abstract class ExternalProcessExecutor implements IExecutor {
             }
         } catch (ScriptExecutionException e) {
         	logger.debug(String.format("Script (ID: %s) execution error", inputId), e);
-        	
+
         	//TODO Curve fit failures should be handled on the CalculationService side instead of masked as Success output
         	if ("CURVE_FITTING".equalsIgnoreCase(scriptExecution.getScriptExecutionInput().getCategory())) {
-        		return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SUCCESS, "A curve could not be fitted");	
+        		return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SUCCESS, "A curve could not be fitted");
         	}
-        	
+
         	return new ScriptExecutionOutputDTO(inputId, "", ResponseStatusCode.SCRIPT_ERROR, e.getMessage());
         } catch (WorkerException e) {
         	logger.error("Worker encountered an internal error", e);
